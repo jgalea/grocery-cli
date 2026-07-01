@@ -23,7 +23,7 @@ import (
 
 const (
 	baseURL   = "https://www.compraonline.bonpreuesclat.cat"
-	userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
+	userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
 	// clientName mirrors the apollographql-client-name the SPA sends.
 	clientName = "ecom-web"
 

@@ -27,6 +27,7 @@ type Config struct {
 	SiteID   string // SFCC site id, e.g. continente
 	Locale   string // SFCC locale segment, e.g. pt_PT
 	Currency string // e.g. EUR
+	Cart     bool   // cart write path verified for this store (others: preconditions unhandled)
 }
 
 const userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"

@@ -49,9 +49,11 @@ type paviItem struct {
 }
 
 func (c *Client) toHit(it paviItem) store.Hit {
-	id := it.ID
+	// Prefer the barcode as the id: it's what the cart API keys on, so search
+	// results feed straight into `cart add`.
+	id := it.Barcode
 	if id == "" {
-		id = it.Barcode
+		id = it.ID
 	}
 	return store.Hit{
 		ID:           id,

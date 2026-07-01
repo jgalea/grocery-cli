@@ -128,11 +128,11 @@ var metas = []Meta{
 	{
 		Key: "continente", Label: "Continente", Country: "PT",
 		Langs: []string{"pt"}, Backend: "ssr",
-		Caps: []string{"search", "batch"},
+		Caps: []string{"search", "batch", "cart"},
 		new: func(lang string, logf func(string, ...any)) store.Store {
 			return ssr.New(ssr.Config{
 				Key: "continente", BaseURL: "https://www.continente.pt",
-				SiteID: "continente", Locale: "pt_PT", Currency: "EUR",
+				SiteID: "continente", Locale: "pt_PT", Currency: "EUR", Cart: true,
 			}, logf)
 		},
 	},
@@ -185,7 +185,7 @@ var metas = []Meta{
 	{
 		Key: "scotts", Label: "Scotts (Malta)", Country: "MT",
 		Langs: []string{"en"}, Backend: "woocommerce",
-		Caps: []string{"search", "batch", "total", "product", "categories"},
+		Caps: []string{"search", "batch", "total", "product", "categories", "cart"},
 		new: func(lang string, logf func(string, ...any)) store.Store {
 			return woocommerce.New(woocommerce.Config{Key: "scotts", BaseURL: "https://www.scotts.com.mt", Currency: "EUR"}, logf)
 		},
@@ -193,7 +193,7 @@ var metas = []Meta{
 	{
 		Key: "pavipama", Label: "PAVI/PAMA (Malta)", Country: "MT",
 		Langs: []string{"en"}, Backend: "rest",
-		Caps: []string{"search", "batch", "categories"},
+		Caps: []string{"search", "batch", "categories", "cart"},
 		new: func(lang string, logf func(string, ...any)) store.Store {
 			return pavipama.New("pavipama", logf)
 		},

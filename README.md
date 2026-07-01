@@ -24,7 +24,7 @@ For a one-off shop, the store's own app is easier. `grocery` earns its place whe
 - **Give an agent a clean primitive.** The `--json` / `--toon` output is there so an LLM can drive the shop: hand it a shopping list (or a photo of your fridge), have it price the items across your stores and, for stores with an account, fill your cart (see [Shopping cart](#shopping-cart)).
 - **Track prices over time.** Run it on a schedule, log what your regular items cost, and watch how prices move.
 
-Reads need no account and work for every store. A few stores also support filling your own cart once you log in (Mercadona today); the CLI never places the order. Matching "the same product" across chains is fuzzy — `batch` picks the cheapest hit per term, which works for generic items ("leche", "café") but isn't exact-SKU matching.
+Reads need no account and work for every store. Several stores also support filling your own cart (Mercadona, Bonpreu, Continente, Scotts, PAVI/PAMA); the CLI never places the order. Matching "the same product" across chains is fuzzy — `batch` picks the cheapest hit per term, which works for generic items ("leche", "café") but isn't exact-SKU matching.
 
 ## Supported stores
 
@@ -40,15 +40,15 @@ Run `grocery stores` for the live list. Currently 21 stores across 5 countries:
 | `eroski` | Eroski | ES | HTML | search, batch |
 | `alcampo` | Alcampo | ES | SSR | search, batch |
 | `lidl-es` | Lidl España | ES | REST | search, batch |
-| `continente` | Continente | PT | SSR | search, batch |
+| `continente` | Continente | PT | SSR | search, batch, **cart** |
 | `pingodoce` | Pingo Doce | PT | SSR | search, batch |
 | `auchan` | Auchan | PT | SSR | search, batch |
 | `lidl-pt` | Lidl Portugal | PT | REST | search, batch |
 | `morrisons` | Morrisons | UK | REST | search, batch |
 | `iceland` | Iceland | UK | Algolia | search, batch, total, product |
 | `edeka24` | Edeka24 | DE | HTML | search, batch |
-| `scotts` | Scotts | MT | WooCommerce | search, batch, total, product, categories |
-| `pavipama` | PAVI/PAMA | MT | REST | search, batch, categories |
+| `scotts` | Scotts | MT | WooCommerce | search, batch, total, product, categories, **cart** |
+| `pavipama` | PAVI/PAMA | MT | REST | search, batch, categories, **cart** |
 | `welbees` | Welbee's | MT | HTML | search, batch |
 | `convenienceshop` | The Convenience Shop | MT | REST | search, batch |
 | `greens` | Greens | MT | REST | categories |
@@ -112,11 +112,13 @@ Not every store supports every command yet — an SSR store without a product-de
 
 ## Shopping cart
 
-For stores with account support (Mercadona and Bonpreu today), `grocery` can fill your own cart. You log in with your own account, and the CLI adds items — it never places the order; you review and pay in the browser.
+`grocery` can fill your own cart on stores that support it (`grocery stores` lists `cart`). It adds items and stops there — it never places the order; you review and pay in the browser.
 
-Two login styles, depending on the store:
-- **Mercadona** — email + password: `grocery --store mercadona login` (password read hidden, never stored; only the token is cached).
-- **Bonpreu** — paste your logged-in browser Cookie header (its login is SSO/cookie-based): `grocery --store bonpreu login`, then paste the Cookie from DevTools → Network → any request → Cookie.
+Cart stores today, by login style:
+- **Mercadona** (ES) — email + password: `grocery --store mercadona login` (password read hidden, never stored; only the token is cached).
+- **Bonpreu** (ES) — paste your browser Cookie header (SSO/cookie login): `grocery --store bonpreu login`, then paste it from DevTools → Network → any request → Cookie.
+- **PAVI/PAMA** (MT) — paste your login token from a logged-in session: `grocery --store pavipama login`.
+- **Continente** (PT) and **Scotts** (MT) — work as a guest cart with no login at all (verified live); paste a cookie only if you want items in your account cart.
 
 ```bash
 grocery --store mercadona cart add 4240 2    # add 2× a product by id
