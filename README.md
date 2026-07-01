@@ -21,10 +21,10 @@ It's not a scraper for "any supermarket on earth" — it's an explicit registry 
 For a one-off shop, the store's own app is easier. `grocery` earns its place when you want to do things an app can't:
 
 - **Compare prices across stores.** One query, same basket, across every chain in your area — "who's cheapest for my weekly list, Mercadona or Consum or DIA?" No single app shows you that; each only knows its own prices.
-- **Give an agent a clean primitive.** The `--json` / `--toon` output is there so an LLM can drive the shop: hand it a shopping list (or a photo of your fridge), have it price the items across your stores and pick the cheapest basket before you order.
+- **Give an agent a clean primitive.** The `--json` / `--toon` output is there so an LLM can drive the shop: hand it a shopping list (or a photo of your fridge), have it price the items across your stores and, for stores with an account, fill your cart (see [Shopping cart](#shopping-cart)).
 - **Track prices over time.** Run it on a schedule, log what your regular items cost, and watch how prices move.
 
-It's read-only by design (no cart, no orders), and matching "the same product" across chains is fuzzy — `batch` picks the cheapest hit per term, which works for generic items ("leche", "café") but isn't exact-SKU matching.
+Reads need no account and work for every store. A few stores also support filling your own cart once you log in (Mercadona today); the CLI never places the order. Matching "the same product" across chains is fuzzy — `batch` picks the cheapest hit per term, which works for generic items ("leche", "café") but isn't exact-SKU matching.
 
 ## Supported stores
 
@@ -32,7 +32,7 @@ Run `grocery stores` for the live list. Currently 20 stores across 5 countries:
 
 | Key | Store | Country | Backend | Supports |
 |-----|-------|---------|---------|----------|
-| `mercadona` | Mercadona | ES | Algolia + REST | search, batch, total, product, categories |
+| `mercadona` | Mercadona | ES | Algolia + REST | search, batch, total, product, categories, **cart** |
 | `ametller` | Ametller Origen | ES | SCAPI | search, batch, total, product, categories |
 | `consum` | Consum | ES | REST | search, batch, total, product |
 | `dia` | DIA | ES | REST | search, batch |
@@ -109,6 +109,22 @@ Common flags (before or after the command): `--store <key>`, `--lang <code>`, `-
 
 Not every store supports every command yet — an SSR store without a product-detail path returns a clear "not supported for this store yet", and `grocery stores` lists each store's capabilities.
 
+## Shopping cart
+
+For stores with account support (Mercadona today), `grocery` can fill your own cart. You log in with your own account, and the CLI adds items — it never places the order; you review and pay in the browser.
+
+```bash
+grocery --store mercadona login              # your own email + password (read hidden, never stored)
+grocery --store mercadona cart add 4240 2    # add 2× a product by id
+grocery --store mercadona cart               # show the cart
+grocery --store mercadona cart set 4240 0    # remove it
+grocery --store mercadona cart clear         # empty the cart
+```
+
+`cart add`/`set` take a `--max <eur>` cap that refuses an over-budget line before writing.
+
+The point of this is the agent flow: with the bundled **`grocery-shop`** Claude skill, you can say "add milk, eggs and coffee to my Mercadona basket" (or share a photo of a list) and the agent resolves each item, shows a priced plan, and fills the cart after you approve. Install it by copying `.claude/skills/grocery-shop` into your Claude skills directory. Only stores that list `cart` in `grocery stores` support this.
+
 ## Adding a store
 
 Add an entry to `internal/registry`, pointing at either the SCAPI adapter (with the store's short code, org, guest client id and site id) or the SSR adapter (base URL, site id, locale). A store on a different platform (a custom API, a different commerce backend) gets a small new adapter implementing the `store.Store` interface.
@@ -127,4 +143,4 @@ MIT. See [LICENSE](LICENSE).
 
 Author: Jean Galea ([@jgalea](https://github.com/jgalea)). Repository: [github.com/jgalea/grocery-cli](https://github.com/jgalea/grocery-cli).
 
-Inspired by [bonpreu-cli](https://github.com/seifreed/bonpreu-cli) by Marc Rivero López ([@seifreed](https://github.com/seifreed)) and [mercadona-cli](https://github.com/ivorpad/mercadona-cli).
+Inspired by [bonpreu-cli](https://github.com/seifreed/bonpreu-cli) and [mercadona-cli](https://github.com/ivorpad/mercadona-cli).

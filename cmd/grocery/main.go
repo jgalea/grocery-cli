@@ -39,6 +39,10 @@ func run(args []string) int {
 		err = cmdProduct(args[1:])
 	case "categories":
 		err = cmdCategories(args[1:])
+	case "login":
+		err = cmdLogin(args[1:])
+	case "cart":
+		err = cmdCart(args[1:])
 	case "stores":
 		err = cmdStores(args[1:])
 	case "version", "--version", "-v":
@@ -122,6 +126,14 @@ COMMANDS:
   categories [--id N]       category tree, or one category's products with --id
                             --depth N, --limit N, --eco, --cheapest
 
+CART (stores with account support, e.g. mercadona — you log in yourself):
+  login [--user email]      log in with your OWN account (password read hidden, never stored)
+  cart [get]                show your cart
+  cart add <id> [qty]       add to cart (--max <eur> refuses an over-cap line)
+  cart set <id> [qty]       set absolute qty (0 removes)
+  cart clear                empty the cart
+                            (the CLI fills the cart; you review and pay in the browser)
+
 COMMON FLAGS (anywhere after the command):
   --store <key>             store to query
   --lang <code>             catalog language (store-specific, e.g. ca|es|pt)
@@ -134,7 +146,8 @@ ENV:
 
   version | help
 
-Unofficial. These talk to the same endpoints the stores' own sites use, as an
-anonymous guest. Use at a sane request rate. Reads only — no cart, no orders.
+Unofficial. These talk to the same endpoints the stores' own sites use. Read
+commands need no account; cart commands use your own login (see CART) and never
+place an order. Use at a sane request rate.
 `)
 }

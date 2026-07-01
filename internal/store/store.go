@@ -51,3 +51,33 @@ type Store interface {
 	Product(id string) (*Product, error)
 	Categories(depth int) ([]Category, error)
 }
+
+// CartLine is one line in an authenticated cart.
+type CartLine struct {
+	ID    string  `json:"id"`
+	Name  string  `json:"name"`
+	Qty   float64 `json:"qty"`
+	Price float64 `json:"price"` // unit price
+}
+
+// Cart is a snapshot of the user's authenticated cart.
+type Cart struct {
+	Lines    []CartLine `json:"lines"`
+	Count    int        `json:"count"`
+	Total    float64    `json:"total"`
+	Currency string     `json:"currency"`
+}
+
+// Carter is implemented by stores that support an authenticated shopping cart.
+// The account is the user's own (they log in themselves); the CLI fills the cart
+// but never places an order — the user reviews and pays in the browser.
+type Carter interface {
+	// Login authenticates with the user's own credentials and caches the session.
+	Login(username, password string) error
+	// LoggedIn reports whether a usable cached session exists.
+	LoggedIn() bool
+	CartGet() (*Cart, error)
+	CartAdd(productID string, qty float64) (*Cart, error)
+	CartSet(productID string, qty float64) (*Cart, error)
+	CartClear() (*Cart, error)
+}

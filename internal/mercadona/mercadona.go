@@ -36,6 +36,7 @@ type Client struct {
 	cfg  Config
 	http *http.Client
 	logf func(string, ...any)
+	auth *authSession
 }
 
 func New(cfg Config, logf func(string, ...any)) *Client {

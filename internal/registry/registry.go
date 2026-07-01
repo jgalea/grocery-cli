@@ -58,7 +58,7 @@ var metas = []Meta{
 	{
 		Key: "mercadona", Label: "Mercadona", Country: "ES",
 		Langs: []string{"es"}, Backend: "algolia+rest",
-		Caps: []string{"search", "batch", "total", "product", "categories"},
+		Caps: []string{"search", "batch", "total", "product", "categories", "cart"},
 		new: func(lang string, logf func(string, ...any)) store.Store {
 			return mercadona.New(mercadona.Config{
 				Key: "mercadona", BaseURL: "https://tienda.mercadona.es",
