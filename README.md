@@ -23,7 +23,7 @@ Run `grocery stores` to see what's supported right now.
 
 ## Supported stores
 
-Run `grocery stores` for the live list. Currently 18 stores across 5 countries:
+Run `grocery stores` for the live list. Currently 20 stores across 5 countries:
 
 | Key | Store | Country | Backend | Supports |
 |-----|-------|---------|---------|----------|
@@ -45,6 +45,8 @@ Run `grocery stores` for the live list. Currently 18 stores across 5 countries:
 | `pavipama` | PAVI/PAMA | MT | REST | search, batch, categories |
 | `welbees` | Welbee's | MT | HTML | search, batch |
 | `convenienceshop` | The Convenience Shop | MT | REST | search, batch |
+| `greens` | Greens | MT | REST | categories |
+| `smart` | Smart Supermarket | MT | HTML | categories |
 
 Not included: some chains sit behind bot-management (Cloudflare/Akamai/DataDome) that a plain HTTP client can't clear — Carrefour, El Corte Inglés (ES/PT), Bonpreu, Condis, Intermarché, Tesco, Sainsbury's, ASDA, Waitrose, Ocado, REWE, Kaufland, Netto. Their catalogs would need a headed stealth browser, which is out of scope for this CLI. Aldi and Lidl in some markets have no shoppable priced online catalog (weekly-flyer only).
 
