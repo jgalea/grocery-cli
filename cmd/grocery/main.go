@@ -31,6 +31,8 @@ func run(args []string) int {
 		err = cmdSearch(args[1:])
 	case "batch":
 		err = cmdBatch(args[1:])
+	case "compare":
+		err = cmdCompare(args[1:])
 	case "total":
 		err = cmdTotal(args[1:])
 	case "product":
@@ -109,6 +111,11 @@ COMMANDS:
                             --eco         only ecological products (where supported)
                             --cheapest    rank by unit price (€/kg·L·u), mark the best per unit
   batch [-f file]           cheapest hit per term (one per line, '#' comments ok; or positional)
+                            --eco
+  compare [-f file]         price one shopping list across several stores and rank them
+                            --stores a,b,c   stores to compare
+                            --country ES     or: all search-capable stores in a country
+                            --detail         show the matched product per item
                             --eco
   total [-f file]           deterministic basket total from '<id> [qty]' lines
   product <id>              product detail (price, brand, origin, ingredients, nutrition)

@@ -14,12 +14,17 @@
 
 `grocery` is a single Go binary that talks to several online supermarkets through one set of commands. You choose a store with `--store` (or `GROCERY_STORE`), and every store is an adapter behind a common interface, so the commands never change. Every command supports `--json` (data to stdout, logs to stderr) and `--toon` (fewer tokens, for LLMs).
 
-It's not a scraper for "any supermarket on earth" — it's an explicit registry of stores that each have a verified adapter. Two backends cover a lot of European retail today:
+It's not a scraper for "any supermarket on earth" — it's an explicit registry of stores that each have a verified adapter, spanning several backend types (guest APIs, server-rendered catalogs, Algolia search, WooCommerce, and a few bespoke REST/HTML sources). Run `grocery stores` to see what's supported right now.
 
-- **SCAPI** — Salesforce Commerce Cloud headless stores that expose a guest shopper API (anonymous SLAS token, no account).
-- **SSR** — classic server-rendered Salesforce Commerce Cloud stores, read from the product grid the site itself renders.
+## Why use it
 
-Run `grocery stores` to see what's supported right now.
+For a one-off shop, the store's own app is easier. `grocery` earns its place when you want to do things an app can't:
+
+- **Compare prices across stores.** One query, same basket, across every chain in your area — "who's cheapest for my weekly list, Mercadona or Consum or DIA?" No single app shows you that; each only knows its own prices.
+- **Give an agent a clean primitive.** The `--json` / `--toon` output is there so an LLM can drive the shop: hand it a shopping list (or a photo of your fridge), have it price the items across your stores and pick the cheapest basket before you order.
+- **Track prices over time.** Run it on a schedule, log what your regular items cost, and watch how prices move.
+
+It's read-only by design (no cart, no orders), and matching "the same product" across chains is fuzzy — `batch` picks the cheapest hit per term, which works for generic items ("leche", "café") but isn't exact-SKU matching.
 
 ## Supported stores
 
@@ -82,6 +87,10 @@ printf 'leite\npão\novos\n' | grocery --store continente batch -f -
 # Set a default store for the session
 export GROCERY_STORE=continente
 grocery search arroz --limit 3
+
+# Compare a shopping list across stores and rank by basket total
+printf 'leche\naceite\nhuevos\ncafe\npan\n' | grocery compare -f - --stores mercadona,consum,dia,alcampo
+printf 'leite\novos\ncafe\n' | grocery compare -f - --country PT --detail
 ```
 
 ## Commands
@@ -91,6 +100,7 @@ grocery search arroz --limit 3
 | `grocery stores` | List supported stores, their country, backend and capabilities |
 | `grocery search <term…>` | Full-text search. `--limit N`, `--eco` (where supported), `--cheapest` (rank by €/kg·L·u) |
 | `grocery batch [-f file]` | Cheapest hit per term (one per line, `#` comments ok; or positional) |
+| `grocery compare [-f file]` | Price one shopping list across several stores and rank them (`--stores a,b,c` or `--country ES`, `--detail`) |
 | `grocery total [-f file]` | Deterministic basket total from `<id> [qty]` lines, summed in integer cents |
 | `grocery product <id>` | Product detail (price, brand, origin, ingredients, nutrition) |
 | `grocery categories [--id N]` | Category tree, or one category's products with `--id` |
