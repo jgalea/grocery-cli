@@ -23,14 +23,30 @@ Run `grocery stores` to see what's supported right now.
 
 ## Supported stores
 
+Run `grocery stores` for the live list. Currently 18 stores across 5 countries:
+
 | Key | Store | Country | Backend | Supports |
 |-----|-------|---------|---------|----------|
 | `mercadona` | Mercadona | ES | Algolia + REST | search, batch, total, product, categories |
 | `ametller` | Ametller Origen | ES | SCAPI | search, batch, total, product, categories |
+| `consum` | Consum | ES | REST | search, batch, total, product |
+| `dia` | DIA | ES | REST | search, batch |
+| `eroski` | Eroski | ES | HTML | search, batch |
+| `alcampo` | Alcampo | ES | SSR | search, batch |
+| `lidl-es` | Lidl España | ES | REST | search, batch |
 | `continente` | Continente | PT | SSR | search, batch |
+| `pingodoce` | Pingo Doce | PT | SSR | search, batch |
 | `auchan` | Auchan | PT | SSR | search, batch |
+| `lidl-pt` | Lidl Portugal | PT | REST | search, batch |
+| `morrisons` | Morrisons | UK | REST | search, batch |
+| `iceland` | Iceland | UK | Algolia | search, batch, total, product |
+| `edeka24` | Edeka24 | DE | HTML | search, batch |
+| `scotts` | Scotts | MT | WooCommerce | search, batch, total, product, categories |
+| `pavipama` | PAVI/PAMA | MT | REST | search, batch, categories |
+| `welbees` | Welbee's | MT | HTML | search, batch |
+| `convenienceshop` | The Convenience Shop | MT | REST | search, batch |
 
-Run `grocery stores` for the current list — more chains (Spain, Portugal, and beyond) are being added as adapters land.
+Not included: some chains sit behind bot-management (Cloudflare/Akamai/DataDome) that a plain HTTP client can't clear — Carrefour, El Corte Inglés (ES/PT), Bonpreu, Condis, Intermarché, Tesco, Sainsbury's, ASDA, Waitrose, Ocado, REWE, Kaufland, Netto. Their catalogs would need a headed stealth browser, which is out of scope for this CLI. Aldi and Lidl in some markets have no shoppable priced online catalog (weekly-flyer only).
 
 ## Install
 
