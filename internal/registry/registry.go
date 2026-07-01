@@ -6,16 +6,22 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/jgalea/grocery-cli/internal/alcampo"
 	"github.com/jgalea/grocery-cli/internal/consum"
+	"github.com/jgalea/grocery-cli/internal/convenienceshop"
 	"github.com/jgalea/grocery-cli/internal/dia"
 	"github.com/jgalea/grocery-cli/internal/edeka24"
 	"github.com/jgalea/grocery-cli/internal/eroski"
 	"github.com/jgalea/grocery-cli/internal/iceland"
+	"github.com/jgalea/grocery-cli/internal/lidl"
 	"github.com/jgalea/grocery-cli/internal/mercadona"
 	"github.com/jgalea/grocery-cli/internal/morrisons"
+	"github.com/jgalea/grocery-cli/internal/pavipama"
 	"github.com/jgalea/grocery-cli/internal/scapi"
 	"github.com/jgalea/grocery-cli/internal/ssr"
 	"github.com/jgalea/grocery-cli/internal/store"
+	"github.com/jgalea/grocery-cli/internal/welbees"
+	"github.com/jgalea/grocery-cli/internal/woocommerce"
 )
 
 // Meta describes a store for the registry and `stores` listing.
@@ -139,6 +145,62 @@ var metas = []Meta{
 				Key: "pingodoce", BaseURL: "https://www.pingodoce.pt",
 				SiteID: "pingo-doce", Locale: "pt_PT", Currency: "EUR",
 			}, logf)
+		},
+	},
+	{
+		Key: "alcampo", Label: "Alcampo", Country: "ES",
+		Langs: []string{"es"}, Backend: "ssr",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return alcampo.New("alcampo", logf)
+		},
+	},
+	{
+		Key: "lidl-es", Label: "Lidl España", Country: "ES",
+		Langs: []string{"es"}, Backend: "rest",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return lidl.New(lidl.Config{Key: "lidl-es", Host: "www.lidl.es", Assortment: "ES", Locale: "es_ES", Currency: "EUR"}, logf)
+		},
+	},
+	{
+		Key: "lidl-pt", Label: "Lidl Portugal", Country: "PT",
+		Langs: []string{"pt"}, Backend: "rest",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return lidl.New(lidl.Config{Key: "lidl-pt", Host: "www.lidl.pt", Assortment: "PT", Locale: "pt_PT", Currency: "EUR"}, logf)
+		},
+	},
+	{
+		Key: "scotts", Label: "Scotts (Malta)", Country: "MT",
+		Langs: []string{"en"}, Backend: "woocommerce",
+		Caps: []string{"search", "batch", "total", "product", "categories"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return woocommerce.New(woocommerce.Config{Key: "scotts", BaseURL: "https://www.scotts.com.mt", Currency: "EUR"}, logf)
+		},
+	},
+	{
+		Key: "pavipama", Label: "PAVI/PAMA (Malta)", Country: "MT",
+		Langs: []string{"en"}, Backend: "rest",
+		Caps: []string{"search", "batch", "categories"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return pavipama.New("pavipama", logf)
+		},
+	},
+	{
+		Key: "welbees", Label: "Welbee's (Malta)", Country: "MT",
+		Langs: []string{"en"}, Backend: "html",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return welbees.New("welbees", logf)
+		},
+	},
+	{
+		Key: "convenienceshop", Label: "The Convenience Shop (Malta)", Country: "MT",
+		Langs: []string{"en"}, Backend: "rest",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return convenienceshop.New("convenienceshop", logf)
 		},
 	},
 }
