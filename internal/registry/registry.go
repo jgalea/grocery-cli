@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/jgalea/grocery-cli/internal/mercadona"
 	"github.com/jgalea/grocery-cli/internal/scapi"
 	"github.com/jgalea/grocery-cli/internal/ssr"
 	"github.com/jgalea/grocery-cli/internal/store"
@@ -41,6 +42,19 @@ var metas = []Meta{
 		},
 	},
 	{
+		Key: "mercadona", Label: "Mercadona", Country: "ES",
+		Langs: []string{"es"}, Backend: "algolia+rest",
+		Caps: []string{"search", "batch", "total", "product", "categories"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return mercadona.New(mercadona.Config{
+				Key: "mercadona", BaseURL: "https://tienda.mercadona.es",
+				// Public search-only Algolia creds embedded in Mercadona's web app.
+				AlgoliaApp: "7UZJKL1DJ0", AlgoliaKey: "9d8f2e39e90df472b4f2e559a116fe17",
+				IndexBase: "products_prod", Warehouse: "bcn1", Lang: "es",
+			}, logf)
+		},
+	},
+	{
 		Key: "continente", Label: "Continente", Country: "PT",
 		Langs: []string{"pt"}, Backend: "ssr",
 		Caps: []string{"search", "batch"},
@@ -48,6 +62,17 @@ var metas = []Meta{
 			return ssr.New(ssr.Config{
 				Key: "continente", BaseURL: "https://www.continente.pt",
 				SiteID: "continente", Locale: "pt_PT", Currency: "EUR",
+			}, logf)
+		},
+	},
+	{
+		Key: "auchan", Label: "Auchan", Country: "PT",
+		Langs: []string{"pt"}, Backend: "ssr",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return ssr.New(ssr.Config{
+				Key: "auchan", BaseURL: "https://www.auchan.pt",
+				SiteID: "AuchanPT", Locale: "pt", Currency: "EUR",
 			}, logf)
 		},
 	},

@@ -44,14 +44,32 @@ func New(cfg Config, logf func(string, ...any)) *Client {
 
 func (c *Client) Key() string { return c.cfg.Key }
 
-var tileRe = regexp.MustCompile(`data-product-tile-impression=(?:'([^']*)'|"([^"]*)")`)
+// tileRe matches the per-tile analytics JSON SFCC storefronts embed. Themes use
+// different attribute names — Continente: data-product-tile-impression,
+// Auchan: data-gtm — both carrying {id,name,price,brand,category}.
+var tileRe = regexp.MustCompile(`data-(?:product-tile-impression|gtm)=(?:'([^']*)'|"([^"]*)")`)
 
 type tileJSON struct {
-	Name     string  `json:"name"`
-	ID       string  `json:"id"`
-	Price    float64 `json:"price"`
-	Brand    string  `json:"brand"`
-	Category string  `json:"category"`
+	Name     string    `json:"name"`
+	ID       string    `json:"id"`
+	Price    flexFloat `json:"price"`
+	Brand    string    `json:"brand"`
+	Category string    `json:"category"`
+}
+
+// flexFloat parses a JSON number or a quoted numeric string ("0.86").
+type flexFloat float64
+
+func (f *flexFloat) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), `"`)
+	if s == "" || s == "null" {
+		return nil
+	}
+	v, err := strconv.ParseFloat(s, 64)
+	if err == nil {
+		*f = flexFloat(v)
+	}
+	return nil
 }
 
 func (c *Client) get(u string) (string, error) {
@@ -109,7 +127,7 @@ func (c *Client) parseTiles(body string) []store.Hit {
 			cat = cat[i+1:]
 		}
 		out = append(out, store.Hit{
-			ID: t.ID, Name: strings.TrimSpace(t.Name), Price: t.Price,
+			ID: t.ID, Name: strings.TrimSpace(t.Name), Price: float64(t.Price),
 			Brand: t.Brand, Category: cat, Currency: c.cfg.Currency, Available: true,
 		})
 	}

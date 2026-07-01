@@ -25,10 +25,12 @@ Run `grocery stores` to see what's supported right now.
 
 | Key | Store | Country | Backend | Supports |
 |-----|-------|---------|---------|----------|
+| `mercadona` | Mercadona | ES | Algolia + REST | search, batch, total, product, categories |
 | `ametller` | Ametller Origen | ES | SCAPI | search, batch, total, product, categories |
 | `continente` | Continente | PT | SSR | search, batch |
+| `auchan` | Auchan | PT | SSR | search, batch |
 
-Roadmap (each is another adapter, not a rewrite): Mercadona (ES, open API), Bonpreu i Esclat (ES, AWS WAF), Auchan (PT, SSR), Aldi (PT), Pingo Doce via Mercadão (PT).
+Run `grocery stores` for the current list — more chains (Spain, Portugal, and beyond) are being added as adapters land.
 
 ## Install
 
