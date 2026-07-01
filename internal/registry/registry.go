@@ -8,7 +8,11 @@ import (
 
 	"github.com/jgalea/grocery-cli/internal/consum"
 	"github.com/jgalea/grocery-cli/internal/dia"
+	"github.com/jgalea/grocery-cli/internal/edeka24"
+	"github.com/jgalea/grocery-cli/internal/eroski"
+	"github.com/jgalea/grocery-cli/internal/iceland"
 	"github.com/jgalea/grocery-cli/internal/mercadona"
+	"github.com/jgalea/grocery-cli/internal/morrisons"
 	"github.com/jgalea/grocery-cli/internal/scapi"
 	"github.com/jgalea/grocery-cli/internal/ssr"
 	"github.com/jgalea/grocery-cli/internal/store"
@@ -70,6 +74,38 @@ var metas = []Meta{
 		Caps: []string{"search", "batch", "total", "product"},
 		new: func(lang string, logf func(string, ...any)) store.Store {
 			return consum.New("consum", logf)
+		},
+	},
+	{
+		Key: "eroski", Label: "Eroski", Country: "ES",
+		Langs: []string{"es"}, Backend: "html",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return eroski.New("eroski", logf)
+		},
+	},
+	{
+		Key: "morrisons", Label: "Morrisons", Country: "UK",
+		Langs: []string{"en"}, Backend: "rest",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return morrisons.New("morrisons", logf)
+		},
+	},
+	{
+		Key: "iceland", Label: "Iceland", Country: "UK",
+		Langs: []string{"en"}, Backend: "algolia",
+		Caps: []string{"search", "batch", "total", "product"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return iceland.New("iceland", logf)
+		},
+	},
+	{
+		Key: "edeka24", Label: "Edeka24", Country: "DE",
+		Langs: []string{"de"}, Backend: "html",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return edeka24.New("edeka24", logf)
 		},
 	},
 	{
