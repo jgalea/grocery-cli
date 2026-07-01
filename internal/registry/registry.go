@@ -12,12 +12,14 @@ import (
 	"github.com/jgalea/grocery-cli/internal/dia"
 	"github.com/jgalea/grocery-cli/internal/edeka24"
 	"github.com/jgalea/grocery-cli/internal/eroski"
+	"github.com/jgalea/grocery-cli/internal/greens"
 	"github.com/jgalea/grocery-cli/internal/iceland"
 	"github.com/jgalea/grocery-cli/internal/lidl"
 	"github.com/jgalea/grocery-cli/internal/mercadona"
 	"github.com/jgalea/grocery-cli/internal/morrisons"
 	"github.com/jgalea/grocery-cli/internal/pavipama"
 	"github.com/jgalea/grocery-cli/internal/scapi"
+	"github.com/jgalea/grocery-cli/internal/smart"
 	"github.com/jgalea/grocery-cli/internal/ssr"
 	"github.com/jgalea/grocery-cli/internal/store"
 	"github.com/jgalea/grocery-cli/internal/welbees"
@@ -201,6 +203,22 @@ var metas = []Meta{
 		Caps: []string{"search", "batch"},
 		new: func(lang string, logf func(string, ...any)) store.Store {
 			return convenienceshop.New("convenienceshop", logf)
+		},
+	},
+	{
+		Key: "greens", Label: "Greens (Malta)", Country: "MT",
+		Langs: []string{"en"}, Backend: "rest",
+		Caps: []string{"categories"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return greens.New("greens", logf)
+		},
+	},
+	{
+		Key: "smart", Label: "Smart Supermarket (Malta)", Country: "MT",
+		Langs: []string{"en"}, Backend: "html",
+		Caps: []string{"categories"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return smart.New("smart", logf)
 		},
 	},
 }
