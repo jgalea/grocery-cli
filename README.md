@@ -24,11 +24,11 @@ For a one-off shop, the store's own app is easier. `grocery` earns its place whe
 - **Give an agent a clean primitive.** The `--json` / `--toon` output is there so an LLM can drive the shop: hand it a shopping list (or a photo of your fridge), have it price the items across your stores and, for stores with an account, fill your cart (see [Shopping cart](#shopping-cart)).
 - **Track prices over time.** Run it on a schedule, log what your regular items cost, and watch how prices move.
 
-Reads need no account and work for every store. Several stores also support filling your own cart (Mercadona, Bonpreu, Continente, Scotts, PAVI/PAMA); the CLI never places the order. Matching "the same product" across chains is fuzzy — `batch` picks the cheapest hit per term, which works for generic items ("leche", "café") but isn't exact-SKU matching.
+Reads need no account and work for every store. Several stores also support filling your own cart (Mercadona, Bonpreu, Continente, Pingo Doce, Auchan, Scotts, PAVI/PAMA, Tesco, Sainsbury's); the CLI never places the order. Matching "the same product" across chains is fuzzy — `batch` picks the cheapest hit per term, which works for generic items ("leche", "café") but isn't exact-SKU matching.
 
 ## Supported stores
 
-Run `grocery stores` for the live list. Currently 21 stores across 5 countries:
+Run `grocery stores` for the live list. Currently 23 stores across 5 countries:
 
 | Key | Store | Country | Backend | Supports |
 |-----|-------|---------|---------|----------|
@@ -41,11 +41,13 @@ Run `grocery stores` for the live list. Currently 21 stores across 5 countries:
 | `alcampo` | Alcampo | ES | SSR | search, batch |
 | `lidl-es` | Lidl España | ES | REST | search, batch |
 | `continente` | Continente | PT | SSR | search, batch, **cart** |
-| `pingodoce` | Pingo Doce | PT | SSR | search, batch |
-| `auchan` | Auchan | PT | SSR | search, batch |
+| `pingodoce` | Pingo Doce | PT | SSR | search, batch, **cart** |
+| `auchan` | Auchan | PT | SSR | search, batch, **cart** |
 | `lidl-pt` | Lidl Portugal | PT | REST | search, batch |
 | `morrisons` | Morrisons | UK | REST | search, batch |
 | `iceland` | Iceland | UK | Algolia | search, batch, total, product |
+| `tesco` | Tesco | UK | cookie + GraphQL | search, batch, product, categories, **cart** (login) |
+| `sainsburys` | Sainsbury's | UK | cookie + REST | search, batch, product, **cart** (login) |
 | `edeka24` | Edeka24 | DE | HTML | search, batch |
 | `scotts` | Scotts | MT | WooCommerce | search, batch, total, product, categories, **cart** |
 | `pavipama` | PAVI/PAMA | MT | REST | search, batch, categories, **cart** |
@@ -54,7 +56,7 @@ Run `grocery stores` for the live list. Currently 21 stores across 5 countries:
 | `greens` | Greens | MT | REST | categories |
 | `smart` | Smart Supermarket | MT | HTML | categories |
 
-Not included: some chains sit behind bot-management (Cloudflare/Akamai/DataDome) that a plain HTTP client can't clear — Carrefour, El Corte Inglés (ES/PT), Condis, Intermarché, Tesco, Sainsbury's, ASDA, Waitrose, Ocado, REWE, Kaufland, Netto. Their catalogs would need a headed stealth browser, which is out of scope for this CLI. Aldi and Lidl in some markets have no shoppable priced online catalog (weekly-flyer only).
+Not included: some chains sit behind bot-management (Cloudflare/Akamai/DataDome) that a plain HTTP client can't clear — Carrefour, El Corte Inglés (ES/PT), Condis, Intermarché, ASDA, Waitrose, Ocado, REWE, Kaufland, Netto. Their catalogs would need a headed stealth browser, which is out of scope for this CLI. Aldi and Lidl in some markets have no shoppable priced online catalog (weekly-flyer only).
 
 ## Install
 
@@ -115,10 +117,11 @@ Not every store supports every command yet — an SSR store without a product-de
 `grocery` can fill your own cart on stores that support it (`grocery stores` lists `cart`). It adds items and stops there — it never places the order; you review and pay in the browser.
 
 Cart stores today, by login style:
+- **Continente, Pingo Doce, Auchan** (PT) and **Scotts** (MT) — guest cart, no login needed (verified live); paste a cookie only if you want items in your own account cart. Pingo Doce needs a home-delivery postal code (defaults to Lisbon `1000-001`; override with `GROCERY_PINGODOCE_POSTAL`).
 - **Mercadona** (ES) — email + password: `grocery --store mercadona login` (password read hidden, never stored; only the token is cached).
 - **Bonpreu** (ES) — paste your browser Cookie header (SSO/cookie login): `grocery --store bonpreu login`, then paste it from DevTools → Network → any request → Cookie.
 - **PAVI/PAMA** (MT) — paste your login token from a logged-in session: `grocery --store pavipama login`.
-- **Continente** (PT) and **Scotts** (MT) — work as a guest cart with no login at all (verified live); paste a cookie only if you want items in your account cart.
+- **Tesco, Sainsbury's** (UK) — behind Akamai, so they need your logged-in browser Cookie even to search: `grocery --store tesco login` first, then search and cart work.
 
 ```bash
 grocery --store mercadona cart add 4240 2    # add 2× a product by id

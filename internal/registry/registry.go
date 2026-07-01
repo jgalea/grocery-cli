@@ -19,10 +19,12 @@ import (
 	"github.com/jgalea/grocery-cli/internal/mercadona"
 	"github.com/jgalea/grocery-cli/internal/morrisons"
 	"github.com/jgalea/grocery-cli/internal/pavipama"
+	"github.com/jgalea/grocery-cli/internal/sainsburys"
 	"github.com/jgalea/grocery-cli/internal/scapi"
 	"github.com/jgalea/grocery-cli/internal/smart"
 	"github.com/jgalea/grocery-cli/internal/ssr"
 	"github.com/jgalea/grocery-cli/internal/store"
+	"github.com/jgalea/grocery-cli/internal/tesco"
 	"github.com/jgalea/grocery-cli/internal/welbees"
 	"github.com/jgalea/grocery-cli/internal/woocommerce"
 )
@@ -118,6 +120,22 @@ var metas = []Meta{
 		},
 	},
 	{
+		Key: "tesco", Label: "Tesco", Country: "UK",
+		Langs: []string{"en"}, Backend: "cookie+graphql",
+		Caps: []string{"search", "batch", "product", "categories", "cart"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return tesco.New("tesco", logf)
+		},
+	},
+	{
+		Key: "sainsburys", Label: "Sainsbury's", Country: "UK",
+		Langs: []string{"en"}, Backend: "cookie+rest",
+		Caps: []string{"search", "batch", "product", "cart"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return sainsburys.New("sainsburys", logf)
+		},
+	},
+	{
 		Key: "edeka24", Label: "Edeka24", Country: "DE",
 		Langs: []string{"de"}, Backend: "html",
 		Caps: []string{"search", "batch"},
@@ -139,22 +157,24 @@ var metas = []Meta{
 	{
 		Key: "auchan", Label: "Auchan", Country: "PT",
 		Langs: []string{"pt"}, Backend: "ssr",
-		Caps: []string{"search", "batch"},
+		Caps: []string{"search", "batch", "cart"},
 		new: func(lang string, logf func(string, ...any)) store.Store {
 			return ssr.New(ssr.Config{
 				Key: "auchan", BaseURL: "https://www.auchan.pt",
 				SiteID: "AuchanPT", Locale: "pt", Currency: "EUR",
+				Cart: true, NeedsCSRF: true, PostalCode: "1000-001",
 			}, logf)
 		},
 	},
 	{
 		Key: "pingodoce", Label: "Pingo Doce", Country: "PT",
 		Langs: []string{"pt"}, Backend: "ssr",
-		Caps: []string{"search", "batch"},
+		Caps: []string{"search", "batch", "cart"},
 		new: func(lang string, logf func(string, ...any)) store.Store {
 			return ssr.New(ssr.Config{
 				Key: "pingodoce", BaseURL: "https://www.pingodoce.pt",
 				SiteID: "pingo-doce", Locale: "pt_PT", Currency: "EUR",
+				Cart: true, PostalCode: "1000-001",
 			}, logf)
 		},
 	},

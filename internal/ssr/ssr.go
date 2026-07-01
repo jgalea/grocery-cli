@@ -27,7 +27,20 @@ type Config struct {
 	SiteID   string // SFCC site id, e.g. continente
 	Locale   string // SFCC locale segment, e.g. pt_PT
 	Currency string // e.g. EUR
-	Cart     bool   // cart write path verified for this store (others: preconditions unhandled)
+	Cart     bool   // cart write path verified for this store
+
+	// NeedsCSRF marks a store whose cart writes are CSRF-protected: a token is
+	// scraped from the cart page and sent as csrf_token on Add/Update/Remove.
+	// Continente and Pingo Doce don't need it; Auchan does.
+	NeedsCSRF bool
+	// PostalCode is a delivery area (Portuguese postal code) established via
+	// Delivery-SetPostalCode before the first cart write. Some SFRA carts reject
+	// add-to-cart until a delivery area is set. Empty means no precondition.
+	// Overridable per store with the GROCERY_<KEY>_POSTAL env var (KEY upper-cased,
+	// e.g. GROCERY_PINGODOCE_POSTAL). Pingo Doce needs a code that maps to home
+	// delivery (e.g. 1000-001 Lisbon; a store-only code like Cascais 2750-642 won't
+	// enable add-to-cart).
+	PostalCode string
 }
 
 const userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
