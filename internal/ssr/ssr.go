@@ -45,16 +45,68 @@ func New(cfg Config, logf func(string, ...any)) *Client {
 func (c *Client) Key() string { return c.cfg.Key }
 
 // tileRe matches the per-tile analytics JSON SFCC storefronts embed. Themes use
-// different attribute names — Continente: data-product-tile-impression,
-// Auchan: data-gtm — both carrying {id,name,price,brand,category}.
-var tileRe = regexp.MustCompile(`data-(?:product-tile-impression|gtm)=(?:'([^']*)'|"([^"]*)")`)
+// different attribute names and key styles:
+//
+//	Continente: data-product-tile-impression → {id,name,price,brand,category}
+//	Auchan:     data-gtm                      → {id,name,price,brand,category}
+//	Pingo Doce: data-gtm-info                 → {item_id,item_name,price,item_brand} (GA4)
+var tileRe = regexp.MustCompile(`data-(?:product-tile-impression|gtm|gtm-info)=(?:'([^']*)'|"([^"]*)")`)
+
+// tileItem is a product inside a GA4-style event blob (Pingo Doce's data-gtm-info
+// wraps its product in {value, items:[{item_id,...}]}).
+type tileItem struct {
+	ItemID       string    `json:"item_id"`
+	ItemName     string    `json:"item_name"`
+	ItemBrand    string    `json:"item_brand"`
+	ItemCategory string    `json:"item_category"`
+	Price        flexFloat `json:"price"`
+}
 
 type tileJSON struct {
-	Name     string    `json:"name"`
-	ID       string    `json:"id"`
-	Price    flexFloat `json:"price"`
-	Brand    string    `json:"brand"`
-	Category string    `json:"category"`
+	// flat shapes (Continente / Auchan)
+	ID           string    `json:"id"`
+	ItemID       string    `json:"item_id"`
+	Name         string    `json:"name"`
+	ItemName     string    `json:"item_name"`
+	Brand        string    `json:"brand"`
+	ItemBrand    string    `json:"item_brand"`
+	Category     string    `json:"category"`
+	ItemCategory string    `json:"item_category"`
+	Price        flexFloat `json:"price"`
+	// nested GA4 event shape (Pingo Doce)
+	Value flexFloat  `json:"value"`
+	Items []tileItem `json:"items"`
+}
+
+func first(vals ...string) string {
+	for _, v := range vals {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+// products flattens a tile blob into one or more store.Hit-ready records,
+// handling both the flat shape and the nested GA4 items[] shape.
+func (t tileJSON) products() []tileItem {
+	if len(t.Items) > 0 {
+		out := t.Items
+		// GA4 events carry the price at the top (value); backfill items missing it.
+		for i := range out {
+			if out[i].Price == 0 {
+				out[i].Price = t.Value
+			}
+		}
+		return out
+	}
+	return []tileItem{{
+		ItemID:       first(t.ID, t.ItemID),
+		ItemName:     first(t.Name, t.ItemName),
+		ItemBrand:    first(t.Brand, t.ItemBrand),
+		ItemCategory: first(t.Category, t.ItemCategory),
+		Price:        t.Price,
+	}}
 }
 
 // flexFloat parses a JSON number or a quoted numeric string ("0.86").
@@ -118,18 +170,23 @@ func (c *Client) parseTiles(body string) []store.Hit {
 			raw = m[2]
 		}
 		var t tileJSON
-		if !decodeTile(raw, &t) || t.ID == "" || seen[t.ID] {
+		if !decodeTile(raw, &t) {
 			continue
 		}
-		seen[t.ID] = true
-		cat := t.Category
-		if i := strings.LastIndexByte(cat, '/'); i >= 0 {
-			cat = cat[i+1:]
+		for _, it := range t.products() {
+			if it.ItemID == "" || it.ItemName == "" || seen[it.ItemID] {
+				continue
+			}
+			seen[it.ItemID] = true
+			cat := it.ItemCategory
+			if i := strings.LastIndexByte(cat, '/'); i >= 0 {
+				cat = cat[i+1:]
+			}
+			out = append(out, store.Hit{
+				ID: it.ItemID, Name: strings.TrimSpace(it.ItemName), Price: float64(it.Price),
+				Brand: it.ItemBrand, Category: cat, Currency: c.cfg.Currency, Available: true,
+			})
 		}
-		out = append(out, store.Hit{
-			ID: t.ID, Name: strings.TrimSpace(t.Name), Price: float64(t.Price),
-			Brand: t.Brand, Category: cat, Currency: c.cfg.Currency, Available: true,
-		})
 	}
 	return out
 }

@@ -94,6 +94,17 @@ var metas = []Meta{
 			}, logf)
 		},
 	},
+	{
+		Key: "pingodoce", Label: "Pingo Doce", Country: "PT",
+		Langs: []string{"pt"}, Backend: "ssr",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return ssr.New(ssr.Config{
+				Key: "pingodoce", BaseURL: "https://www.pingodoce.pt",
+				SiteID: "pingo-doce", Locale: "pt_PT", Currency: "EUR",
+			}, logf)
+		},
+	},
 }
 
 var byKey = func() map[string]Meta {
