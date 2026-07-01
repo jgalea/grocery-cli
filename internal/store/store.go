@@ -69,15 +69,27 @@ type Cart struct {
 }
 
 // Carter is implemented by stores that support an authenticated shopping cart.
-// The account is the user's own (they log in themselves); the CLI fills the cart
-// but never places an order — the user reviews and pays in the browser.
+// The account is the user's own; the CLI fills the cart but never places an
+// order — the user reviews and pays in the browser. Authentication is a separate
+// concern (see PasswordAuth / CookieAuth) because stores differ.
 type Carter interface {
-	// Login authenticates with the user's own credentials and caches the session.
-	Login(username, password string) error
 	// LoggedIn reports whether a usable cached session exists.
 	LoggedIn() bool
 	CartGet() (*Cart, error)
 	CartAdd(productID string, qty float64) (*Cart, error)
 	CartSet(productID string, qty float64) (*Cart, error)
 	CartClear() (*Cart, error)
+}
+
+// PasswordAuth is a Carter that logs in with the user's own username + password
+// (e.g. Mercadona). The CLI keeps the resulting token, never the password.
+type PasswordAuth interface {
+	Login(username, password string) error
+}
+
+// CookieAuth is a Carter authenticated by pasting the user's own browser Cookie
+// header (e.g. Bonpreu, whose login is cookie/SSO-based). The user copies it from
+// their logged-in session; the CLI never sees the password.
+type CookieAuth interface {
+	SetCookie(cookieHeader string) error
 }

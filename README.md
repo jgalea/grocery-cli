@@ -28,11 +28,12 @@ Reads need no account and work for every store. A few stores also support fillin
 
 ## Supported stores
 
-Run `grocery stores` for the live list. Currently 20 stores across 5 countries:
+Run `grocery stores` for the live list. Currently 21 stores across 5 countries:
 
 | Key | Store | Country | Backend | Supports |
 |-----|-------|---------|---------|----------|
 | `mercadona` | Mercadona | ES | Algolia + REST | search, batch, total, product, categories, **cart** |
+| `bonpreu` | Bonpreu i Esclat | ES | uTLS | search, batch, total, product, categories, **cart** |
 | `ametller` | Ametller Origen | ES | SCAPI | search, batch, total, product, categories |
 | `consum` | Consum | ES | REST | search, batch, total, product |
 | `dia` | DIA | ES | REST | search, batch |
@@ -53,7 +54,7 @@ Run `grocery stores` for the live list. Currently 20 stores across 5 countries:
 | `greens` | Greens | MT | REST | categories |
 | `smart` | Smart Supermarket | MT | HTML | categories |
 
-Not included: some chains sit behind bot-management (Cloudflare/Akamai/DataDome) that a plain HTTP client can't clear — Carrefour, El Corte Inglés (ES/PT), Bonpreu, Condis, Intermarché, Tesco, Sainsbury's, ASDA, Waitrose, Ocado, REWE, Kaufland, Netto. Their catalogs would need a headed stealth browser, which is out of scope for this CLI. Aldi and Lidl in some markets have no shoppable priced online catalog (weekly-flyer only).
+Not included: some chains sit behind bot-management (Cloudflare/Akamai/DataDome) that a plain HTTP client can't clear — Carrefour, El Corte Inglés (ES/PT), Condis, Intermarché, Tesco, Sainsbury's, ASDA, Waitrose, Ocado, REWE, Kaufland, Netto. Their catalogs would need a headed stealth browser, which is out of scope for this CLI. Aldi and Lidl in some markets have no shoppable priced online catalog (weekly-flyer only).
 
 ## Install
 
@@ -111,10 +112,13 @@ Not every store supports every command yet — an SSR store without a product-de
 
 ## Shopping cart
 
-For stores with account support (Mercadona today), `grocery` can fill your own cart. You log in with your own account, and the CLI adds items — it never places the order; you review and pay in the browser.
+For stores with account support (Mercadona and Bonpreu today), `grocery` can fill your own cart. You log in with your own account, and the CLI adds items — it never places the order; you review and pay in the browser.
+
+Two login styles, depending on the store:
+- **Mercadona** — email + password: `grocery --store mercadona login` (password read hidden, never stored; only the token is cached).
+- **Bonpreu** — paste your logged-in browser Cookie header (its login is SSO/cookie-based): `grocery --store bonpreu login`, then paste the Cookie from DevTools → Network → any request → Cookie.
 
 ```bash
-grocery --store mercadona login              # your own email + password (read hidden, never stored)
 grocery --store mercadona cart add 4240 2    # add 2× a product by id
 grocery --store mercadona cart               # show the cart
 grocery --store mercadona cart set 4240 0    # remove it

@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/jgalea/grocery-cli/internal/alcampo"
+	"github.com/jgalea/grocery-cli/internal/bonpreu"
 	"github.com/jgalea/grocery-cli/internal/consum"
 	"github.com/jgalea/grocery-cli/internal/convenienceshop"
 	"github.com/jgalea/grocery-cli/internal/dia"
@@ -66,6 +67,14 @@ var metas = []Meta{
 				AlgoliaApp: "7UZJKL1DJ0", AlgoliaKey: "9d8f2e39e90df472b4f2e559a116fe17",
 				IndexBase: "products_prod", Warehouse: "bcn1", Lang: "es",
 			}, logf)
+		},
+	},
+	{
+		Key: "bonpreu", Label: "Bonpreu i Esclat", Country: "ES",
+		Langs: []string{"ca", "es"}, Backend: "utls",
+		Caps: []string{"search", "batch", "total", "product", "categories", "cart"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return bonpreu.New("bonpreu", lang, logf)
 		},
 	},
 	{

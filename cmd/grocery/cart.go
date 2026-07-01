@@ -26,34 +26,54 @@ func carterFor(cf *common) (store.Carter, store.Store, error) {
 	return ca, st, nil
 }
 
-// cmdLogin authenticates with the user's OWN credentials. The password is read
-// without echo and never stored (only the resulting token is cached).
+// cmdLogin authenticates with the user's OWN account. Password stores read the
+// password without echo (never stored); cookie stores take a pasted Cookie
+// header lifted from the user's logged-in browser session.
 func cmdLogin(args []string) error {
 	fs, cf := newCommonFlags("login")
-	user := fs.String("user", "", "account email/username (prompted if omitted)")
+	user := fs.String("user", "", "account email/username (password stores)")
+	cookie := fs.String("cookie", "", "browser Cookie header (cookie stores; prompted/stdin if omitted)")
 	parseFlags(fs, args)
-	ca, st, err := carterFor(cf)
+	_, st, err := carterFor(cf)
 	if err != nil {
 		return err
 	}
 
-	username := *user
-	if username == "" {
-		fmt.Fprint(os.Stderr, "Email: ")
-		line, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-		username = strings.TrimSpace(line)
-	}
-	if username == "" {
-		return fmt.Errorf("no email provided")
-	}
-	fmt.Fprintf(os.Stderr, "Password for %s at %s: ", username, st.Key())
-	pwBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
-	fmt.Fprintln(os.Stderr)
-	if err != nil {
-		return fmt.Errorf("reading password: %w", err)
-	}
-	if err := ca.Login(username, strings.TrimSpace(string(pwBytes))); err != nil {
-		return err
+	switch a := st.(type) {
+	case store.PasswordAuth:
+		username := *user
+		if username == "" {
+			fmt.Fprint(os.Stderr, "Email: ")
+			line, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+			username = strings.TrimSpace(line)
+		}
+		if username == "" {
+			return fmt.Errorf("no email provided")
+		}
+		fmt.Fprintf(os.Stderr, "Password for %s at %s: ", username, st.Key())
+		pw, rerr := term.ReadPassword(int(os.Stdin.Fd()))
+		fmt.Fprintln(os.Stderr)
+		if rerr != nil {
+			return fmt.Errorf("reading password: %w", rerr)
+		}
+		if err := a.Login(username, strings.TrimSpace(string(pw))); err != nil {
+			return err
+		}
+	case store.CookieAuth:
+		c := *cookie
+		if c == "" {
+			fmt.Fprintf(os.Stderr, "Paste your %s browser Cookie header (DevTools → Network → a request → Cookie), then Enter:\n", st.Key())
+			line, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+			c = strings.TrimSpace(line)
+		}
+		if c == "" {
+			return fmt.Errorf("no cookie provided")
+		}
+		if err := a.SetCookie(c); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("store %q supports a cart but no known login method", st.Key())
 	}
 	fmt.Printf("Logged in to %s. The session is cached; the CLI never stores your password.\n", st.Key())
 	return nil
