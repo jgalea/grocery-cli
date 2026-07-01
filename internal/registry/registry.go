@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/jgalea/grocery-cli/internal/consum"
+	"github.com/jgalea/grocery-cli/internal/dia"
 	"github.com/jgalea/grocery-cli/internal/mercadona"
 	"github.com/jgalea/grocery-cli/internal/scapi"
 	"github.com/jgalea/grocery-cli/internal/ssr"
@@ -52,6 +54,22 @@ var metas = []Meta{
 				AlgoliaApp: "7UZJKL1DJ0", AlgoliaKey: "9d8f2e39e90df472b4f2e559a116fe17",
 				IndexBase: "products_prod", Warehouse: "bcn1", Lang: "es",
 			}, logf)
+		},
+	},
+	{
+		Key: "dia", Label: "DIA", Country: "ES",
+		Langs: []string{"es"}, Backend: "rest",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return dia.New("dia", logf)
+		},
+	},
+	{
+		Key: "consum", Label: "Consum", Country: "ES",
+		Langs: []string{"es"}, Backend: "rest",
+		Caps: []string{"search", "batch", "total", "product"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return consum.New("consum", logf)
 		},
 	},
 	{
