@@ -237,7 +237,7 @@ var metas = []Meta{
 	{
 		Key: "greens", Label: "Greens (Malta)", Country: "MT",
 		Langs: []string{"en"}, Backend: "rest",
-		Caps: []string{"categories"},
+		Caps: []string{"categories", "cart"},
 		new: func(lang string, logf func(string, ...any)) store.Store {
 			return greens.New("greens", logf)
 		},

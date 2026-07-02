@@ -31,7 +31,7 @@ const (
 	xapiURL   = "https://xapi.tesco.com/"
 	searchURL = "https://search.api.tesco.com/search"
 	siteURL   = "https://www.tesco.com/groceries/en-GB/"
-	userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+	userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
 
 	// tescoAPIKey is the static public key baked into Tesco's mfe-* bundles
 	// (confirmed in the reference's discovery notes). Not a secret.
