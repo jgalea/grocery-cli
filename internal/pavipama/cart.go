@@ -14,15 +14,16 @@ import (
 )
 
 // PAVI/PAMA's read API is open, but the cart is per-account and gated behind a
-// login: the storefront SPA obtains a JWT from POST /cli/profiles/login and sends
-// it as `Authorization: Bearer <jwt>` on every cart call. Unauthenticated cart
+// login: the storefront obtains a JWT from POST /cli/profiles/login and sends it
+// as `Authorization: Bearer <jwt>` on every cart call. Unauthenticated cart
 // requests 404. There's no cookie session — auth is purely the bearer token.
 //
-// The CLI can't run the password login flow for the user (it would have to hold
-// the password), so this adapter follows the CookieAuth pattern: the user copies
-// the bearer token from a logged-in browser session (DevTools → Network → any
-// /api/cli/ecommerce/cart request → Authorization header) and the CLI caches it.
-// The cart is filled but never checked out — the user reviews and pays online.
+// Login is the same username+password JSON call the web app makes, so the adapter
+// implements PasswordAuth: the user runs `grocery --store pavipama login`, types
+// their own password at a hidden prompt, and the CLI keeps only the returned JWT,
+// never the password. SetCookie stays as a fallback for anyone who'd rather paste
+// a bearer token lifted from a logged-in browser session. Either way the cart is
+// filled but never checked out — the user reviews and pays online.
 //
 // The cart API keys lines on the product barcode (EAN), not the internal UUID,
 // so cart add/set/get operate on barcodes.
@@ -41,6 +42,75 @@ func (c *Client) authPath() string {
 		dir = filepath.Join(home, ".grocery")
 	}
 	return filepath.Join(dir, "auth-"+c.key+".json")
+}
+
+// Login authenticates with the user's own PAVI/PAMA account and caches the
+// bearer token it returns. The password is used only for this one request and is
+// never persisted — only the JWT is (via SetCookie).
+func (c *Client) Login(username, password string) error {
+	body, _ := json.Marshal(map[string]string{"username": username, "password": password})
+	req, _ := http.NewRequest(http.MethodPost, baseURL+"/cli/profiles/login", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", userAgent)
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("login failed (http %d) — check the email and password", resp.StatusCode)
+	}
+	var r struct {
+		apiEnvelope
+		Data json.RawMessage `json:"data"`
+	}
+	if err := json.Unmarshal(raw, &r); err != nil {
+		return fmt.Errorf("login: unexpected response: %s", truncate(string(raw), 200))
+	}
+	if r.ResponseCode != 0 {
+		return fmt.Errorf("login failed: %s — check the email and password", envErr(r.apiEnvelope))
+	}
+	tok := extractJWT(r.Data)
+	if tok == "" {
+		return fmt.Errorf("login succeeded but no token was found in the response: %s", truncate(string(r.Data), 200))
+	}
+	return c.SetCookie(tok)
+}
+
+// extractJWT pulls the bearer token out of a login response's data. The field
+// name isn't guaranteed, so it checks the usual keys and, failing that, any
+// JWT-shaped string value. data may also be a bare token string.
+func extractJWT(data json.RawMessage) string {
+	if len(data) == 0 {
+		return ""
+	}
+	var m map[string]any
+	if json.Unmarshal(data, &m) != nil {
+		var s string
+		if json.Unmarshal(data, &s) == nil && looksLikeJWT(s) {
+			return s
+		}
+		return ""
+	}
+	for _, k := range []string{"token", "jwt", "accessToken", "access_token", "authToken", "bearer"} {
+		if v, ok := m[k].(string); ok && strings.TrimSpace(v) != "" {
+			return normalizeToken(v)
+		}
+	}
+	for _, v := range m {
+		if s, ok := v.(string); ok && looksLikeJWT(s) {
+			return s
+		}
+	}
+	return ""
+}
+
+// looksLikeJWT reports whether s has the three dot-separated segments of a JWT.
+func looksLikeJWT(s string) bool {
+	parts := strings.Split(strings.TrimSpace(s), ".")
+	return len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != ""
 }
 
 // SetCookie caches the bearer token lifted from a logged-in browser session. It
@@ -234,7 +304,7 @@ func lineFor(pc *paviCart, id string) (qty float64, um string) {
 func (c *Client) cartDo(method, path string, body, out any) error {
 	tok, ok := c.loadToken()
 	if !ok {
-		return fmt.Errorf("not logged in; run `grocery --store %s login` and paste the Authorization bearer token from a logged-in pavipama.com.mt browser session", c.key)
+		return fmt.Errorf("not logged in; run `grocery --store %s login` first", c.key)
 	}
 	var rdr io.Reader
 	if body != nil {
@@ -256,7 +326,7 @@ func (c *Client) cartDo(method, path string, body, out any) error {
 	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
 	switch {
 	case resp.StatusCode == http.StatusUnauthorized, resp.StatusCode == http.StatusForbidden, resp.StatusCode == http.StatusNotFound:
-		return fmt.Errorf("cart request failed (http %d) — the session is missing or expired; run `grocery --store %s login` again with a fresh token", resp.StatusCode, c.key)
+		return fmt.Errorf("cart request failed (http %d) — the session is missing or expired; run `grocery --store %s login` again", resp.StatusCode, c.key)
 	case resp.StatusCode < 200 || resp.StatusCode >= 300:
 		return fmt.Errorf("http %d: %s", resp.StatusCode, truncate(string(raw), 200))
 	}
