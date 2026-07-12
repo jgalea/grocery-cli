@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/jgalea/grocery-cli/internal/match"
 	"github.com/jgalea/grocery-cli/internal/registry"
 )
 
@@ -71,7 +72,11 @@ func cmdCompare(args []string) error {
 					r.Detail = append(r.Detail, itemResult{Term: t, Found: false})
 					continue
 				}
-				h := pickCheapest(hits)
+				h, ok := match.Select(t, hits)
+				if !ok {
+					r.Detail = append(r.Detail, itemResult{Term: t, Found: false})
+					continue
+				}
 				if h.Currency != "" {
 					r.Currency = h.Currency
 				}

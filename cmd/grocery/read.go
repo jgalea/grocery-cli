@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jgalea/grocery-cli/internal/match"
 	"github.com/jgalea/grocery-cli/internal/store"
 )
 
@@ -100,7 +101,11 @@ func cmdBatch(args []string) error {
 	fs, cf := newCommonFlags("batch")
 	file := fs.String("f", "", "file with one term per line ('-' for stdin); else terms are positional")
 	eco := fs.Bool("eco", false, "prefer ecological hits (where supported)")
+	candidates := fs.Int("candidates", 0, "with --json/--toon: include top N scored hits per term")
 	parseFlags(fs, args)
+	if *candidates > 0 && !cf.jsonOut && !cf.toon {
+		return fmt.Errorf("--candidates requires --json or --toon")
+	}
 
 	terms, err := collectLines(*file, fs.Args())
 	if err != nil {
@@ -114,9 +119,20 @@ func cmdBatch(args []string) error {
 		return err
 	}
 
+	type candidateRow struct {
+		ID           string  `json:"id"`
+		Name         string  `json:"name"`
+		Price        float64 `json:"price,omitempty"`
+		Unit         string  `json:"unit,omitempty"`
+		PricePerUnit float64 `json:"pricePerUnit,omitempty"`
+		Score        int     `json:"score"`
+		Passed       bool    `json:"passed"`
+		RejectReason string  `json:"rejectReason,omitempty"`
+	}
 	type row struct {
-		Term    string     `json:"term"`
-		Product *store.Hit `json:"product"`
+		Term       string         `json:"term"`
+		Product    *store.Hit     `json:"product"`
+		Candidates []candidateRow `json:"candidates,omitempty"`
 	}
 	out := make([]row, 0, len(terms))
 	missing := 0
@@ -125,13 +141,27 @@ func cmdBatch(args []string) error {
 		if serr != nil {
 			return storeErr(st, serr)
 		}
+		r := row{Term: t}
+		if *candidates > 0 {
+			for _, c := range match.TopCandidates(t, hits, *candidates) {
+				r.Candidates = append(r.Candidates, candidateRow{
+					ID: c.Hit.ID, Name: c.Hit.Name, Price: c.Hit.Price,
+					Unit: c.Hit.Unit, PricePerUnit: c.Hit.PricePerUnit,
+					Score: c.Score, Passed: c.Passed, RejectReason: c.RejectReason,
+				})
+			}
+		}
 		if len(hits) == 0 {
-			out = append(out, row{Term: t})
+			out = append(out, r)
 			missing++
 			continue
 		}
-		best := pickCheapest(hits)
-		out = append(out, row{Term: t, Product: &best})
+		if best, ok := match.Select(t, hits); ok {
+			r.Product = &best
+		} else {
+			missing++
+		}
+		out = append(out, r)
 	}
 	if done, err := emitStructured(cf, out); done {
 		return err
@@ -153,24 +183,6 @@ func cmdBatch(args []string) error {
 		return fmt.Errorf("%d of %d terms returned no product", missing, len(terms))
 	}
 	return nil
-}
-
-func pickCheapest(hits []store.Hit) store.Hit {
-	best := hits[0]
-	bestKey := priceKey(best)
-	for _, h := range hits[1:] {
-		if k := priceKey(h); k < bestKey {
-			best, bestKey = h, k
-		}
-	}
-	return best
-}
-
-func priceKey(h store.Hit) int64 {
-	if h.Unit != "" && h.PricePerUnit > 0 {
-		return cents(h.PricePerUnit)
-	}
-	return cents(h.Price)
 }
 
 func cmdTotal(args []string) error {

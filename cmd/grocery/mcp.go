@@ -10,6 +10,7 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
+	"github.com/jgalea/grocery-cli/internal/match"
 	"github.com/jgalea/grocery-cli/internal/registry"
 	"github.com/jgalea/grocery-cli/internal/store"
 )
@@ -151,7 +152,11 @@ func toolBatch(_ context.Context, _ *mcp.CallToolRequest, in mcpBatchArgs) (*mcp
 			out = append(out, row{Term: t})
 			continue
 		}
-		best := pickCheapest(hits)
+		best, ok := match.Select(t, hits)
+		if !ok {
+			out = append(out, row{Term: t})
+			continue
+		}
 		out = append(out, row{Term: t, Product: &best})
 		totalCents += cents(best.Price)
 		if best.Currency != "" {
@@ -227,7 +232,11 @@ func toolCompare(_ context.Context, _ *mcp.CallToolRequest, in mcpCompareArgs) (
 					r.Detail = append(r.Detail, itemResult{Term: t, Found: false})
 					continue
 				}
-				h := pickCheapest(hits)
+				h, ok := match.Select(t, hits)
+				if !ok {
+					r.Detail = append(r.Detail, itemResult{Term: t, Found: false})
+					continue
+				}
 				if h.Currency != "" {
 					r.Currency = h.Currency
 				}

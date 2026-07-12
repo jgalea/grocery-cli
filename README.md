@@ -24,7 +24,7 @@ For a one-off shop, the store's own app is easier. `grocery` earns its place whe
 - **Give an agent a clean primitive.** The `--json` / `--toon` output is there so an LLM can drive the shop: hand it a shopping list (or a photo of your fridge), have it price the items across your stores and, for stores with an account, fill your cart (see [Shopping cart](#shopping-cart)).
 - **Track prices over time.** Run it on a schedule, log what your regular items cost, and watch how prices move.
 
-Reads need no account and work for every store. Several stores also support filling your own cart (Mercadona, Bonpreu, Continente, Pingo Doce, Auchan, Scotts, PAVI/PAMA, Tesco, Sainsbury's); the CLI never places the order. Matching "the same product" across chains is fuzzy — `batch` picks the cheapest hit per term, which works for generic items ("leche", "café") but isn't exact-SKU matching.
+Reads need no account and work for every store. Several stores also support filling your own cart (Mercadona, Bonpreu, Continente, Pingo Doce, Auchan, Scotts, PAVI/PAMA, Tesco, Sainsbury's); the CLI never places the order. Matching "the same product" across chains is fuzzy — `batch` and `compare` score search hits against each term (token overlap, size proximity, penalties for obvious category mismatches) and pick the cheapest passing hit; terms with no plausible match come back as not-found. Use `batch --candidates N --json` when an agent wants the scored shortlist to choose from.
 
 ## Supported stores
 
@@ -102,7 +102,7 @@ printf 'leite\novos\ncafe\n' | grocery compare -f - --country PT --detail
 |---------|-------------|
 | `grocery stores` | List supported stores, their country, backend and capabilities |
 | `grocery search <term…>` | Full-text search. `--limit N`, `--eco` (where supported), `--cheapest` (rank by €/kg·L·u) |
-| `grocery batch [-f file]` | Cheapest hit per term (one per line, `#` comments ok; or positional) |
+| `grocery batch [-f file]` | Best matching hit per term (one per line, `#` comments ok; or positional). `--candidates N` with `--json`/`--toon` includes scored alternatives |
 | `grocery compare [-f file]` | Price one shopping list across several stores and rank them (`--stores a,b,c` or `--country ES`, `--detail`) |
 | `grocery total [-f file]` | Deterministic basket total from `<id> [qty]` lines, summed in integer cents |
 | `grocery product <id>` | Product detail (price, brand, origin, ingredients, nutrition) |
