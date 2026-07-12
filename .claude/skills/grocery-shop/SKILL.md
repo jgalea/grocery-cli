@@ -12,6 +12,23 @@ Turn "here's what I want from <store>" into items in the user's real cart, using
 - `grocery` is on PATH. Check `grocery stores` — the target store must list `cart` in its capabilities (today: `mercadona`). If it doesn't, tell the user this store is read-only and offer to price/compare instead.
 - The user must be logged in: `grocery --store <store> cart` should not error with "not logged in". If it does, tell them to run `grocery --store <store> login` themselves (they enter their own email + password; you never handle credentials). Do not attempt to log in for them.
 
+## Usuals shortcut
+
+If the user asks for "the usual" / "my regular shop" / "order what I normally get", check purchase history first:
+
+```bash
+grocery usuals --store <store> --json
+```
+
+If there are matches, show the list and ask for approval, then either:
+
+```bash
+grocery usuals order --store <store> --dry-run   # show plan
+grocery usuals order --store <store>             # fill cart after yes
+```
+
+History builds automatically from successful `cart add` calls. `--min` (default 2) controls how many past buys count as a usual.
+
 ## Flow
 
 1. **Parse the request into an item list.** From text, or by reading a photo of a list/fridge/receipt into concrete items. Show the user the parsed list and let them correct it before you touch anything.

@@ -126,6 +126,9 @@ func cmdCart(args []string) error {
 		var cart *store.Cart
 		if sub == "add" {
 			cart, err = ca.CartAdd(id, qty)
+			if err == nil {
+				recordCartAdd(st, id, qty, cart)
+			}
 		} else {
 			cart, err = ca.CartSet(id, qty)
 		}

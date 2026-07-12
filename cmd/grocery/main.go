@@ -43,6 +43,8 @@ func run(args []string) int {
 		err = cmdLogin(args[1:])
 	case "cart":
 		err = cmdCart(args[1:])
+	case "usuals":
+		err = cmdUsuals(args[1:])
 	case "stores":
 		err = cmdStores(args[1:])
 	case "version", "--version", "-v":
@@ -133,6 +135,12 @@ CART (stores with account support, e.g. mercadona — you log in yourself):
   cart set <id> [qty]       set absolute qty (0 removes)
   cart clear                empty the cart
                             (the CLI fills the cart; you review and pay in the browser)
+  usuals                    list regularly-bought items from local purchase history
+                            --store <key>   filter to one store
+                            --min N         minimum times bought (default 2)
+  usuals order --store <key>  refill the cart with usual items for that store
+                            --dry-run       print plan without adding
+                            --min N
 
 COMMON FLAGS (anywhere after the command):
   --store <key>             store to query

@@ -107,6 +107,8 @@ printf 'leite\novos\ncafe\n' | grocery compare -f - --country PT --detail
 | `grocery total [-f file]` | Deterministic basket total from `<id> [qty]` lines, summed in integer cents |
 | `grocery product <id>` | Product detail (price, brand, origin, ingredients, nutrition) |
 | `grocery categories [--id N]` | Category tree, or one category's products with `--id` |
+| `grocery usuals` | Regularly-bought items from local purchase history (`--store`, `--min N`, default 2) |
+| `grocery usuals order --store <key>` | Refill the cart with usual items (`--dry-run`, `--min N`) |
 
 Common flags (before or after the command): `--store <key>`, `--lang <code>`, `--json`, `--toon`.
 
@@ -131,6 +133,8 @@ grocery --store mercadona cart clear         # empty the cart
 ```
 
 `cart add`/`set` take a `--max <eur>` cap that refuses an over-budget line before writing.
+
+Each successful `cart add` appends a line to `~/.grocery/history.jsonl` (override with `GROCERY_CONFIG_DIR`). Use `grocery usuals` to see what you buy often, and `grocery usuals order --store mercadona` to refill the cart in one step.
 
 The point of this is the agent flow: with the bundled **`grocery-shop`** Claude skill, you can say "add milk, eggs and coffee to my Mercadona basket" (or share a photo of a list) and the agent resolves each item, shows a priced plan, and fills the cart after you approve. Install it by copying `.claude/skills/grocery-shop` into your Claude skills directory. Only stores that list `cart` in `grocery stores` support this.
 
