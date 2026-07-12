@@ -138,6 +138,33 @@ Each successful `cart add` appends a line to `~/.grocery/history.jsonl` (overrid
 
 The point of this is the agent flow: with the bundled **`grocery-shop`** Claude skill, you can say "add milk, eggs and coffee to my Mercadona basket" (or share a photo of a list) and the agent resolves each item, shows a priced plan, and fills the cart after you approve. Install it by copying `.claude/skills/grocery-shop` into your Claude skills directory. Only stores that list `cart` in `grocery stores` support this.
 
+## MCP server
+
+`grocery mcp` runs a stdio [Model Context Protocol](https://modelcontextprotocol.io) server in the same binary. Any MCP client can search catalogs, price a list across stores, and fill carts — no shell access needed. Cart tools fill the basket but never place an order; you review and pay in the browser.
+
+Tools exposed: `stores`, `search`, `batch`, `compare`, `product`, `categories`, `cart_get`, `cart_add`, `cart_set`, `cart_clear`. Results are compact JSON (same shapes as `--json`). Logs go to stderr; stdout is the protocol channel.
+
+**Claude Code:**
+
+```bash
+claude mcp add grocery -- grocery mcp
+```
+
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "grocery": {
+      "command": "grocery",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+Use the full path to `grocery` if it's not on your `PATH`. Cart stores still need a one-time `grocery --store <key> login` in a terminal before the MCP client can write to your cart.
+
 ## Adding a store
 
 Add an entry to `internal/registry`, pointing at either the SCAPI adapter (with the store's short code, org, guest client id and site id) or the SSR adapter (base URL, site id, locale). A store on a different platform (a custom API, a different commerce backend) gets a small new adapter implementing the `store.Store` interface.

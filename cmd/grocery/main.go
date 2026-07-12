@@ -47,6 +47,8 @@ func run(args []string) int {
 		err = cmdUsuals(args[1:])
 	case "stores":
 		err = cmdStores(args[1:])
+	case "mcp":
+		err = cmdMCP(args[1:])
 	case "version", "--version", "-v":
 		fmt.Println(versionString())
 	case "help", "-h", "--help":
@@ -141,6 +143,10 @@ CART (stores with account support, e.g. mercadona — you log in yourself):
   usuals order --store <key>  refill the cart with usual items for that store
                             --dry-run       print plan without adding
                             --min N
+
+AGENTS:
+  mcp                       run a stdio MCP server exposing search/batch/compare/cart
+                            (register: claude mcp add grocery -- grocery mcp)
 
 COMMON FLAGS (anywhere after the command):
   --store <key>             store to query
