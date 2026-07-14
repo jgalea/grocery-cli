@@ -110,3 +110,27 @@ func TestParseSizeUnitSpellings(t *testing.T) {
 		}
 	}
 }
+
+// Groceries are near enough density 1, so a weight and a volume are comparable.
+// Skipping the check when the dimensions differ let "milk 1L" match a 150g kefir.
+func TestSizeCompatibleCrossDimension(t *testing.T) {
+	oneLitre := Size{ML: 1000, Packs: 1, HasQty: true}
+
+	kefir := Size{Grams: 150, Packs: 1, HasQty: true}
+	if ok, _ := SizeCompatible(oneLitre, kefir); ok {
+		t.Error("150g should not satisfy a 1L request (was the Convenience Shop kefir bug)")
+	}
+
+	// 1L of milk sold as 1000g is the same thing; it must still match.
+	byWeight := Size{Grams: 1000, Packs: 1, HasQty: true}
+	if ok, reason := SizeCompatible(oneLitre, byWeight); !ok {
+		t.Errorf("1000g should satisfy a 1L request, got reject: %s", reason)
+	}
+	// And the reverse direction.
+	if ok, _ := SizeCompatible(Size{Grams: 500, Packs: 1, HasQty: true}, Size{ML: 500, Packs: 1, HasQty: true}); !ok {
+		t.Error("500ml should satisfy a 500g request")
+	}
+	if ok, _ := SizeCompatible(Size{Grams: 1000, Packs: 1, HasQty: true}, Size{ML: 100, Packs: 1, HasQty: true}); ok {
+		t.Error("100ml should not satisfy a 1kg request")
+	}
+}

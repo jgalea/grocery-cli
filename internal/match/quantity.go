@@ -132,6 +132,11 @@ func StripQuantity(text string) string {
 // SizeCompatible reports whether product size is within 2× of the requested size.
 // A single-item request is compared against the pack's per-item size, so asking for
 // "water 1.5L" still matches a 6x1.5L pack rather than being rejected as 9L.
+//
+// Weight and volume are compared against each other at 1ml ≈ 1g. Groceries sit near
+// enough to that density, and the alternative — skipping the check whenever the
+// dimensions differ — is what let a 150g kefir satisfy a "milk 1L" request. Honey
+// sold as 500g still matches a 500ml request; a 150g pot no longer matches a litre.
 func SizeCompatible(want, got Size) (ok bool, reason string) {
 	if !want.HasQty {
 		return true, ""
@@ -142,31 +147,27 @@ func SizeCompatible(want, got Size) (ok bool, reason string) {
 	if want.Packs <= 1 && got.Packs > 1 {
 		got = got.PerItem()
 	}
-	if want.Grams > 0 {
-		if got.Grams <= 0 {
-			return true, ""
-		}
-		r := got.Grams / want.Grams
-		if r < 0.5 || r > 2 {
+
+	const band = 2.0
+	within := func(a, b float64) (bool, string) {
+		r := a / b
+		if r < 1/band || r > band {
 			return false, "size mismatch"
 		}
 		return true, ""
 	}
-	if want.ML > 0 {
-		if got.ML <= 0 {
-			return true, ""
+
+	// Mass and volume are interchangeable at density 1 for comparison purposes.
+	wantAmt := want.Grams + want.ML
+	gotAmt := got.Grams + got.ML
+	if wantAmt > 0 {
+		if gotAmt <= 0 {
+			return true, "" // product is counted, not measured; nothing to compare
 		}
-		r := got.ML / want.ML
-		if r < 0.5 || r > 2 {
-			return false, "size mismatch"
-		}
-		return true, ""
+		return within(gotAmt, wantAmt)
 	}
 	if want.Count > 0 && got.Count > 0 {
-		r := got.Count / want.Count
-		if r < 0.5 || r > 2 {
-			return false, "size mismatch"
-		}
+		return within(got.Count, want.Count)
 	}
 	return true, ""
 }

@@ -100,7 +100,7 @@ func TestSelectRanksOnPerUnitNotSticker(t *testing.T) {
 // A multipack's per-unit price must use the pack total, not the bottle size.
 func TestSelectMultipackPerUnit(t *testing.T) {
 	hits := []store.Hit{
-		{ID: "single", Name: "Still Water 2L", Price: 0.79},         // €0.395/L
+		{ID: "single", Name: "Still Water 2L", Price: 0.79},           // €0.395/L
 		{ID: "sixpack", Name: "San Michel Water 6x1.5L", Price: 3.60}, // €0.40/L
 	}
 	got, ok := Select("water", hits)
