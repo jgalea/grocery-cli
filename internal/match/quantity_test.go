@@ -92,3 +92,21 @@ func TestSizeCompatible(t *testing.T) {
 		t.Error("no requested size should not reject")
 	}
 }
+
+// Stores spell units their own way; all of these are real product names.
+func TestParseSizeUnitSpellings(t *testing.T) {
+	tests := []struct {
+		text string
+		want Size
+	}{
+		{"SPAR OLIVE OIL 1ltr", Size{ML: 1000, Packs: 1, HasQty: true}},
+		{"SPAR MACKEREL OLIVE OIL 250gr", Size{Grams: 250, Packs: 1, HasQty: true}},
+		{"Nestle Yorkie Milk 46grms", Size{Grams: 46, Packs: 1, HasQty: true}},
+		{"Olive Oil 2 Litres", Size{ML: 2000, Packs: 1, HasQty: true}},
+	}
+	for _, tc := range tests {
+		if got := ParseSize(tc.text, "", 0); got != tc.want {
+			t.Errorf("ParseSize(%q) = %+v want %+v", tc.text, got, tc.want)
+		}
+	}
+}

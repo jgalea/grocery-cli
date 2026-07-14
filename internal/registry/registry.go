@@ -20,8 +20,10 @@ import (
 	"github.com/jgalea/grocery-cli/internal/morrisons"
 	"github.com/jgalea/grocery-cli/internal/pavipama"
 	"github.com/jgalea/grocery-cli/internal/sainsburys"
+	"github.com/jgalea/grocery-cli/internal/savemart"
 	"github.com/jgalea/grocery-cli/internal/scapi"
 	"github.com/jgalea/grocery-cli/internal/smart"
+	"github.com/jgalea/grocery-cli/internal/spar"
 	"github.com/jgalea/grocery-cli/internal/ssr"
 	"github.com/jgalea/grocery-cli/internal/store"
 	"github.com/jgalea/grocery-cli/internal/tesco"
@@ -224,6 +226,22 @@ var metas = []Meta{
 		Caps: []string{"search", "batch"},
 		new: func(lang string, logf func(string, ...any)) store.Store {
 			return welbees.New("welbees", logf)
+		},
+	},
+	{
+		Key: "spar", Label: "SPAR (Malta)", Country: "MT",
+		Langs: []string{"en"}, Backend: "html",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return spar.New("spar", logf)
+		},
+	},
+	{
+		Key: "savemart", Label: "Savemart (Malta)", Country: "MT",
+		Langs: []string{"en"}, Backend: "html",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return savemart.New("savemart", logf)
 		},
 	},
 	{

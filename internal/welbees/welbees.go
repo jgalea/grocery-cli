@@ -39,11 +39,20 @@ func (c *Client) Key() string { return c.key }
 // <h6> name and a price rendered as €/&euro; inside a div.text-tertiary. We slice
 // the HTML into per-tile windows on the code attribute, then pull name and price
 // from each window.
+//
+// The tile also shows the shelf-edge unit price ("€22.11/kg") and the pack size in
+// its own font-light div ("90grms"). Neither appears in the product name, so both
+// are lifted out: the unit price populates PricePerUnit, and the pack size is
+// appended to the name so size matching and per-unit ranking have something to
+// work with. A struck-through "RRP €2.99" is the was-price and is ignored; the
+// div.text-tertiary figure is what the shopper actually pays.
 var (
-	codeRe  = regexp.MustCompile(`data-product-code="([^"]+)"`)
-	nameRe  = regexp.MustCompile(`(?s)<h6[^>]*>(.*?)</h6>`)
-	priceRe = regexp.MustCompile(`text-tertiary[^>]*>\s*(?:&euro;|€)\s*([0-9]+(?:\.[0-9]+)?)`)
-	tagRe   = regexp.MustCompile(`<[^>]*>`)
+	codeRe    = regexp.MustCompile(`data-product-code="([^"]+)"`)
+	nameRe    = regexp.MustCompile(`(?s)<h6[^>]*>(.*?)</h6>`)
+	priceRe   = regexp.MustCompile(`text-tertiary[^>]*>\s*(?:&euro;|€)\s*([0-9]+(?:\.[0-9]+)?)`)
+	perUnitRe = regexp.MustCompile(`(?i)(?:&euro;|€)\s*([0-9]+(?:\.[0-9]+)?)\s*/\s*(kg|l|p)\b`)
+	packRe    = regexp.MustCompile(`(?s)font-light[^>]*>\s*([^<]*?\d[^<]*?)\s*</div>`)
+	tagRe     = regexp.MustCompile(`<[^>]*>`)
 )
 
 func (c *Client) log(format string, args ...any) {
@@ -115,13 +124,38 @@ func (c *Client) Search(term string, limit int, eco bool) ([]store.Hit, error) {
 			}
 		}
 
+		// Pack size lives outside the name ("90grms"), so fold it in.
+		if pk := packRe.FindStringSubmatch(tile); pk != nil {
+			if s := cleanText(pk[1]); s != "" {
+				name = name + " " + s
+			}
+		}
+
+		var perUnit float64
+		var unit string
+		if um := perUnitRe.FindStringSubmatch(tile); um != nil {
+			if v, uerr := strconv.ParseFloat(um[1], 64); uerr == nil && v > 0 {
+				perUnit = v
+				switch strings.ToLower(um[2]) {
+				case "kg":
+					unit = "kg"
+				case "l":
+					unit = "L"
+				case "p": // priced per piece
+					unit = "u"
+				}
+			}
+		}
+
 		seen[id] = true
 		out = append(out, store.Hit{
-			ID:        id,
-			Name:      name,
-			Price:     price,
-			Currency:  "EUR",
-			Available: true,
+			ID:           id,
+			Name:         name,
+			Price:        price,
+			PricePerUnit: perUnit,
+			Unit:         unit,
+			Currency:     "EUR",
+			Available:    true,
 		})
 		if limit > 0 && len(out) >= limit {
 			break

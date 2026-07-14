@@ -19,9 +19,11 @@ type Size struct {
 }
 
 var (
-	sizeRE = regexp.MustCompile(`(?i)(\d+(?:[.,]\d+)?)\s*(kg|g|gr|ml|l|cl)\b`)
+	// Stores spell units their own way: "1ltr" (SPAR), "250gr", "46grms", "1 Ltr".
+	unitAlt = `kgs?|kg|grms|grms?|gr|g|mls?|ml|ltrs?|ltr|litres?|liters?|l|cl`
+	sizeRE  = regexp.MustCompile(`(?i)(\d+(?:[.,]\d+)?)\s*(` + unitAlt + `)\b`)
 	// "6x1.5L", "4 x 500 ml", "3×80g"
-	multiRE = regexp.MustCompile(`(?i)(\d+)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*(kg|g|gr|ml|l|cl)\b`)
+	multiRE = regexp.MustCompile(`(?i)(\d+)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*(` + unitAlt + `)\b`)
 )
 
 // ParseSize extracts the pack quantity from text, preferring an explicit multipack
@@ -69,13 +71,13 @@ func sizeFromMatch(num, unit string) Size {
 	n, _ := strconv.ParseFloat(strings.ReplaceAll(num, ",", "."), 64)
 	u := strings.ToLower(strings.TrimSpace(unit))
 	switch u {
-	case "kg":
+	case "kg", "kgs":
 		return Size{Grams: n * 1000, Packs: 1, HasQty: true}
-	case "g", "gr":
+	case "g", "gr", "grms":
 		return Size{Grams: n, Packs: 1, HasQty: true}
-	case "l":
+	case "l", "ltr", "ltrs", "litre", "litres", "liter", "liters":
 		return Size{ML: n * 1000, Packs: 1, HasQty: true}
-	case "ml":
+	case "ml", "mls":
 		return Size{ML: n, Packs: 1, HasQty: true}
 	case "cl":
 		return Size{ML: n * 10, Packs: 1, HasQty: true}
