@@ -80,3 +80,34 @@ func TestScoreAllRejectReasons(t *testing.T) {
 		t.Fatal("expected reject reason")
 	}
 }
+
+// The point of per-unit ranking: a 750ml bottle at €5.00 has a lower sticker
+// price than a 1L at €5.60 but costs more per litre, so it must not win.
+func TestSelectRanksOnPerUnitNotSticker(t *testing.T) {
+	hits := []store.Hit{
+		{ID: "small", Name: "Extra Virgin Olive Oil 750ml", Price: 5.00},
+		{ID: "big", Name: "Extra Virgin Olive Oil 1L", Price: 5.60},
+	}
+	got, ok := Select("olive oil", hits)
+	if !ok {
+		t.Fatal("expected a match")
+	}
+	if got.ID != "big" {
+		t.Errorf("Select picked %q (sticker price), want \"big\" (€5.60/L beats €6.67/L)", got.ID)
+	}
+}
+
+// A multipack's per-unit price must use the pack total, not the bottle size.
+func TestSelectMultipackPerUnit(t *testing.T) {
+	hits := []store.Hit{
+		{ID: "single", Name: "Still Water 2L", Price: 0.79},         // €0.395/L
+		{ID: "sixpack", Name: "San Michel Water 6x1.5L", Price: 3.60}, // €0.40/L
+	}
+	got, ok := Select("water", hits)
+	if !ok {
+		t.Fatal("expected a match")
+	}
+	if got.ID != "single" {
+		t.Errorf("Select picked %q; 2L@€0.79 is €0.395/L vs 6x1.5L@€3.60 = €0.40/L", got.ID)
+	}
+}

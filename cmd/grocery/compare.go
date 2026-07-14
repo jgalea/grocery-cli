@@ -35,11 +35,13 @@ func cmdCompare(args []string) error {
 	}
 
 	type itemResult struct {
-		Term  string  `json:"term"`
-		ID    string  `json:"id,omitempty"`
-		Name  string  `json:"name,omitempty"`
-		Price float64 `json:"price,omitempty"`
-		Found bool    `json:"found"`
+		Term     string  `json:"term"`
+		ID       string  `json:"id,omitempty"`
+		Name     string  `json:"name,omitempty"`
+		Price    float64 `json:"price,omitempty"`
+		PerUnit  float64 `json:"perUnit,omitempty"`
+		UnitName string  `json:"unitName,omitempty"` // kg | L | each
+		Found    bool    `json:"found"`
 	}
 	type storeResult struct {
 		Store      string       `json:"store"`
@@ -82,7 +84,11 @@ func cmdCompare(args []string) error {
 				}
 				r.totalCents += cents(h.Price)
 				r.Found++
-				r.Detail = append(r.Detail, itemResult{Term: t, ID: h.ID, Name: h.Name, Price: h.Price, Found: true})
+				it := itemResult{Term: t, ID: h.ID, Name: h.Name, Price: h.Price, Found: true}
+				if pu, unit, ok := match.EffectivePerUnit(h); ok {
+					it.PerUnit, it.UnitName = pu, unit
+				}
+				r.Detail = append(r.Detail, it)
 			}
 			r.Total = centsStr(r.totalCents)
 			results[i] = r
@@ -116,11 +122,15 @@ func cmdCompare(args []string) error {
 		fmt.Printf("  %-16s %8s%s   %d/%d items%s\n", r.Store, r.Total, currencySymbol(r.Currency), r.Found, r.Items, flag)
 		if *detail {
 			for _, it := range r.Detail {
-				if it.Found {
-					fmt.Printf("      %-14s → %s (%s%s)\n", it.Term, it.Name, centsStr(cents(it.Price)), currencySymbol(r.Currency))
-				} else {
+				if !it.Found {
 					fmt.Printf("      %-14s → (not found)\n", it.Term)
+					continue
 				}
+				per := ""
+				if it.UnitName != "" {
+					per = fmt.Sprintf("  [%s%s/%s]", centsStr(cents(it.PerUnit)), currencySymbol(r.Currency), it.UnitName)
+				}
+				fmt.Printf("      %-14s → %s (%s%s)%s\n", it.Term, it.Name, centsStr(cents(it.Price)), currencySymbol(r.Currency), per)
 			}
 		}
 	}

@@ -122,10 +122,15 @@ func Select(term string, hits []store.Hit) (store.Hit, bool) {
 	}
 
 	termSize := ParseSize(term, "", 0)
+	byUnit := perUnitComparable(passing)
 	sort.SliceStable(passing, func(i, j int) bool {
 		a, b := passing[i], passing[j]
-		pa := priceKey(a.Hit, termSize)
-		pb := priceKey(b.Hit, termSize)
+		var pa, pb int64
+		if byUnit {
+			pa, pb = priceKey(a.Hit, termSize), priceKey(b.Hit, termSize)
+		} else {
+			pa, pb = int64(math.Round(a.Hit.Price*100)), int64(math.Round(b.Hit.Price*100))
+		}
 		if pa != pb {
 			return pa < pb
 		}
@@ -137,14 +142,52 @@ func Select(term string, hits []store.Hit) (store.Hit, bool) {
 	return passing[0].Hit, true
 }
 
-func priceKey(h store.Hit, termSize Size) int64 {
-	if termSize.HasQty && h.Unit != "" && h.PricePerUnit > 0 {
-		return int64(math.Round(h.PricePerUnit * 100))
-	}
+// EffectivePerUnit is the comparable value-for-money figure for a hit: what a
+// kilo, litre or single item actually costs. A store-supplied PricePerUnit wins
+// when present; otherwise it is derived from the pack price and the size parsed
+// out of the product name, which is what lets a 750ml bottle rank behind a 1L one.
+func EffectivePerUnit(h store.Hit) (value float64, unit string, ok bool) {
 	if h.Unit != "" && h.PricePerUnit > 0 {
-		return int64(math.Round(h.PricePerUnit * 100))
+		// Adapters report units in their own casing ("KG", "kg", "L", "u").
+		switch strings.ToLower(h.Unit) {
+		case "kg":
+			return h.PricePerUnit, "kg", true
+		case "l":
+			return h.PricePerUnit, "L", true
+		case "u":
+			return h.PricePerUnit, "each", true
+		}
+		return h.PricePerUnit, h.Unit, true
+	}
+	return PerUnit(h.Price, ParseSize(h.Name, h.Unit, h.PricePerUnit))
+}
+
+// priceKey ranks hits by effective price per unit, falling back to the pack price
+// only when neither hit exposes a parseable size. Comparing across different units
+// (€/kg against €/L) is meaningless, so that falls back to pack price too.
+func priceKey(h store.Hit, termSize Size) int64 {
+	if v, _, ok := EffectivePerUnit(h); ok {
+		return int64(math.Round(v * 100))
 	}
 	return int64(math.Round(h.Price * 100))
+}
+
+// perUnitComparable reports whether all hits express value in the same unit, so
+// ranking on €/unit is honest rather than comparing kilos against litres.
+func perUnitComparable(hits []Result) bool {
+	unit := ""
+	for _, r := range hits {
+		v, u, ok := EffectivePerUnit(r.Hit)
+		if !ok || v <= 0 {
+			return false
+		}
+		if unit == "" {
+			unit = u
+		} else if u != unit {
+			return false
+		}
+	}
+	return unit != ""
 }
 
 // TopCandidates returns up to n results sorted by pass status, then score, then price.
