@@ -47,6 +47,17 @@ const Default = "ametller"
 
 var metas = []Meta{
 	{
+		Key: "masymas", Label: "masymas", Country: "ES",
+		Langs: []string{"es"}, Backend: "ssr",
+		Caps: []string{"search", "batch"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return ssr.New(ssr.Config{
+				Key: "masymas", BaseURL: "https://www.supermasymasonline.com",
+				SiteID: "Masymas", Locale: "es_ES", Currency: "EUR",
+			}, logf)
+		},
+	},
+	{
 		Key: "ametller", Label: "Ametller Origen", Country: "ES",
 		Langs: []string{"ca", "es"}, Backend: "scapi",
 		Caps: []string{"search", "batch", "total", "product", "categories"},

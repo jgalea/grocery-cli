@@ -66,6 +66,22 @@ func (c *Client) Key() string { return c.cfg.Key }
 //	Pingo Doce: data-gtm-info                 → {item_id,item_name,price,item_brand} (GA4)
 var tileRe = regexp.MustCompile(`data-(?:product-tile-impression|gtm|gtm-info)=(?:'([^']*)'|"([^"]*)")`)
 
+// Some SFRA themes don't embed analytics JSON at all and instead carry the
+// product on the tile's own div as data-* attributes (e.g. masymas:
+// <div class="product" data-pid data-price data-brand data-category>). When the
+// analytics parse finds nothing, we fall back to reading those attributes plus
+// the name from the tile image's alt text and the PDP link.
+var (
+	sfraPriceRe = regexp.MustCompile(`\bdata-price="([^"]*)"`)
+	sfraBrandRe = regexp.MustCompile(`\bdata-brand="([^"]*)"`)
+	sfraCatRe   = regexp.MustCompile(`\bdata-category="([^"]*)"`)
+	sfraAltRe   = regexp.MustCompile(`class="tile-image"[^>]*\balt="([^"]+)"`)
+	sfraTitleRe = regexp.MustCompile(`\btitle="([^"]+)"`)
+	sfraHrefRe  = regexp.MustCompile(`<a[^>]+href="(/[^"]+\.html)"`)
+)
+
+const sfraTileMarker = `<div class="product" data-pid="`
+
 // tileItem is a product inside a GA4-style event blob (Pingo Doce's data-gtm-info
 // wraps its product in {value, items:[{item_id,...}]}).
 type tileItem struct {
@@ -169,6 +185,9 @@ func (c *Client) Search(term string, limit int, eco bool) ([]store.Hit, error) {
 		return nil, err
 	}
 	hits := c.parseTiles(body)
+	if len(hits) == 0 {
+		hits = c.parseSFRATiles(body)
+	}
 	if limit > 0 && len(hits) > limit {
 		hits = hits[:limit]
 	}
@@ -213,6 +232,74 @@ func (c *Client) CategoryProducts(categoryID string, limit int, eco bool) ([]sto
 func (c *Client) Product(id string) (*store.Product, error) { return nil, store.ErrUnsupported }
 func (c *Client) Categories(depth int) ([]store.Category, error) {
 	return nil, store.ErrUnsupported
+}
+
+// parseSFRATiles reads the standard SFRA product tile, whose id, price, brand
+// and category live in data-* attributes on the .product div, with the name in
+// the tile image's alt text and the PDP path in the tile link. Used as a
+// fallback for themes that don't embed the analytics JSON tileRe expects.
+func (c *Client) parseSFRATiles(body string) []store.Hit {
+	seen := map[string]bool{}
+	var out []store.Hit
+	starts := allIndex(body, sfraTileMarker)
+	for i, start := range starts {
+		end := len(body)
+		if i+1 < len(starts) {
+			end = starts[i+1]
+		}
+		seg := body[start:end]
+
+		id := seg[len(sfraTileMarker):]
+		if q := strings.IndexByte(id, '"'); q >= 0 {
+			id = id[:q]
+		}
+		if id == "" || seen[id] {
+			continue
+		}
+		name := firstSub(seg, sfraAltRe)
+		if name == "" {
+			name = firstSub(seg, sfraTitleRe)
+		}
+		if name == "" {
+			continue
+		}
+		seen[id] = true
+
+		price, _ := strconv.ParseFloat(firstSub(seg, sfraPriceRe), 64)
+		u := firstSub(seg, sfraHrefRe)
+		if strings.HasPrefix(u, "/") {
+			u = c.cfg.BaseURL + u
+		}
+		out = append(out, store.Hit{
+			ID: id, Name: strings.TrimSpace(html.UnescapeString(name)), Price: price,
+			Brand:    html.UnescapeString(firstSub(seg, sfraBrandRe)),
+			Category: html.UnescapeString(firstSub(seg, sfraCatRe)),
+			Currency: c.cfg.Currency, Available: true, URL: u,
+		})
+	}
+	return out
+}
+
+// firstSub returns the first capture group of re in s, or "".
+func firstSub(s string, re *regexp.Regexp) string {
+	if m := re.FindStringSubmatch(s); m != nil {
+		return m[1]
+	}
+	return ""
+}
+
+// allIndex returns every start offset of sub in s.
+func allIndex(s, sub string) []int {
+	var idx []int
+	for off := 0; ; {
+		j := strings.Index(s[off:], sub)
+		if j < 0 {
+			break
+		}
+		idx = append(idx, off+j)
+		off += j + len(sub)
+	}
+	return idx
 }
 
 // decodeTile HTML-unescapes the embedded JSON and unmarshals it.

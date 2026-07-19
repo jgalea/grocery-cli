@@ -39,6 +39,7 @@ Run `grocery stores` for the live list. Currently 23 stores across 5 countries:
 | `dia` | DIA | ES | REST | search, batch |
 | `eroski` | Eroski | ES | HTML | search, batch |
 | `alcampo` | Alcampo | ES | SSR | search, batch |
+| `masymas` | masymas | ES | SSR | search, batch |
 | `lidl-es` | Lidl España | ES | REST | search, batch |
 | `continente` | Continente | PT | SSR | search, batch, **cart** |
 | `pingodoce` | Pingo Doce | PT | SSR | search, batch, **cart** |
