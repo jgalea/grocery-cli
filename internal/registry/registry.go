@@ -13,6 +13,7 @@ import (
 	"github.com/jgalea/grocery-cli/internal/dia"
 	"github.com/jgalea/grocery-cli/internal/edeka24"
 	"github.com/jgalea/grocery-cli/internal/eroski"
+	"github.com/jgalea/grocery-cli/internal/gadis"
 	"github.com/jgalea/grocery-cli/internal/greens"
 	"github.com/jgalea/grocery-cli/internal/iceland"
 	"github.com/jgalea/grocery-cli/internal/lidl"
@@ -90,6 +91,14 @@ var metas = []Meta{
 		Caps: []string{"search", "batch", "total", "product", "categories", "cart"},
 		new: func(lang string, logf func(string, ...any)) store.Store {
 			return bonpreu.New("bonpreu", lang, logf)
+		},
+	},
+	{
+		Key: "gadis", Label: "Gadis", Country: "ES",
+		Langs: []string{"es", "gl"}, Backend: "rest",
+		Caps: []string{"search", "batch", "total", "product", "categories"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return gadis.New("gadis", lang, logf)
 		},
 	},
 	{

@@ -28,13 +28,14 @@ Reads need no account and work for every store. Several stores also support fill
 
 ## Supported stores
 
-Run `grocery stores` for the live list. Currently 23 stores across 5 countries:
+Run `grocery stores` for the live list. Currently 24 stores across 5 countries:
 
 | Key | Store | Country | Backend | Supports |
 |-----|-------|---------|---------|----------|
 | `mercadona` | Mercadona | ES | Algolia + REST | search, batch, total, product, categories, **cart** |
 | `bonpreu` | Bonpreu i Esclat | ES | uTLS | search, batch, total, product, categories, **cart** |
 | `ametller` | Ametller Origen | ES | SCAPI | search, batch, total, product, categories |
+| `gadis` | Gadis | ES | REST | search, batch, total, product, categories |
 | `consum` | Consum | ES | REST | search, batch, total, product |
 | `dia` | DIA | ES | REST | search, batch |
 | `eroski` | Eroski | ES | HTML | search, batch |
@@ -177,6 +178,7 @@ Add an entry to `internal/registry`, pointing at either the SCAPI adapter (with 
 | `GROCERY_STORE` | Default store key |
 | `GROCERY_CONFIG_DIR` | Override `~/.grocery` (per-store session cache) |
 | `GROCERY_SCAPI_BASE` | Override the SCAPI host (debugging) |
+| `GROCERY_GADIS_STORE` | Gadis assortment store id (defaults to the site's own default) |
 
 ## License
 
