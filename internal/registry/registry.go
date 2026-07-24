@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/jgalea/grocery-cli/internal/alcampo"
+	"github.com/jgalea/grocery-cli/internal/aldi"
 	"github.com/jgalea/grocery-cli/internal/bonpreu"
 	"github.com/jgalea/grocery-cli/internal/consum"
 	"github.com/jgalea/grocery-cli/internal/convenienceshop"
@@ -17,6 +18,7 @@ import (
 	"github.com/jgalea/grocery-cli/internal/greens"
 	"github.com/jgalea/grocery-cli/internal/iceland"
 	"github.com/jgalea/grocery-cli/internal/lidl"
+	"github.com/jgalea/grocery-cli/internal/makro"
 	"github.com/jgalea/grocery-cli/internal/mercadona"
 	"github.com/jgalea/grocery-cli/internal/morrisons"
 	"github.com/jgalea/grocery-cli/internal/pavipama"
@@ -99,6 +101,22 @@ var metas = []Meta{
 		Caps: []string{"search", "batch", "total", "product", "categories"},
 		new: func(lang string, logf func(string, ...any)) store.Store {
 			return gadis.New("gadis", lang, logf)
+		},
+	},
+	{
+		Key: "aldi", Label: "ALDI España", Country: "ES",
+		Langs: []string{"es"}, Backend: "algolia",
+		Caps: []string{"search", "batch", "total", "product", "categories"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return aldi.New("aldi", logf)
+		},
+	},
+	{
+		Key: "makro", Label: "Makro España", Country: "ES",
+		Langs: []string{"es"}, Backend: "rest",
+		Caps: []string{"search", "batch", "total", "product", "categories"},
+		new: func(lang string, logf func(string, ...any)) store.Store {
+			return makro.New("makro", logf)
 		},
 	},
 	{

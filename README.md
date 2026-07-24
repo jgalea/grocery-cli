@@ -28,7 +28,7 @@ Reads need no account and work for every store. Several stores also support fill
 
 ## Supported stores
 
-Run `grocery stores` for the live list. Currently 24 stores across 5 countries:
+Run `grocery stores` for the live list. Currently 29 stores across 5 countries:
 
 | Key | Store | Country | Backend | Supports |
 |-----|-------|---------|---------|----------|
@@ -36,6 +36,8 @@ Run `grocery stores` for the live list. Currently 24 stores across 5 countries:
 | `bonpreu` | Bonpreu i Esclat | ES | uTLS | search, batch, total, product, categories, **cart** |
 | `ametller` | Ametller Origen | ES | SCAPI | search, batch, total, product, categories |
 | `gadis` | Gadis | ES | REST | search, batch, total, product, categories |
+| `aldi` | ALDI España | ES | Algolia | search, batch, total, product, categories |
+| `makro` | Makro España | ES | REST | search, batch, total, product, categories |
 | `consum` | Consum | ES | REST | search, batch, total, product |
 | `dia` | DIA | ES | REST | search, batch |
 | `eroski` | Eroski | ES | HTML | search, batch |
@@ -54,11 +56,19 @@ Run `grocery stores` for the live list. Currently 24 stores across 5 countries:
 | `scotts` | Scotts | MT | WooCommerce | search, batch, total, product, categories, **cart** |
 | `pavipama` | PAVI/PAMA | MT | REST | search, batch, categories, **cart** |
 | `welbees` | Welbee's | MT | HTML | search, batch |
+| `spar` | SPAR | MT | HTML | search, batch |
+| `savemart` | Savemart | MT | HTML | search, batch |
 | `convenienceshop` | The Convenience Shop | MT | REST | search, batch |
 | `greens` | Greens | MT | REST | categories |
 | `smart` | Smart Supermarket | MT | HTML | categories |
 
-Not included: some chains sit behind bot-management (Cloudflare/Akamai/DataDome) that a plain HTTP client can't clear — Carrefour, El Corte Inglés (ES/PT), Condis, Intermarché, ASDA, Waitrose, Ocado, REWE, Kaufland, Netto. Their catalogs would need a headed stealth browser, which is out of scope for this CLI. Aldi and Lidl in some markets have no shoppable priced online catalog (weekly-flyer only).
+Two of the Spanish stores need reading differently from the rest:
+
+`aldi` prices the catalog ALDI publishes online, which it does not sell online, so there is no cart. Prices differ by region; `GROCERY_ALDI_REGION` picks peninsula, Canarias or Baleares.
+
+`makro` is cash-and-carry. It quotes its trade customers net prices, and it sells wholesale packs, so the adapter reports the gross (VAT-inclusive) price and works the per-unit price off the whole pack: "leche entera 1 L contiene 6 unidades" is priced as the six litres it is. Its descriptions are long and brand-first, so `search` finds more than `compare` and `batch` do.
+
+Not included: some chains sit behind bot-management (Cloudflare/Akamai/DataDome) that a plain HTTP client can't clear — Carrefour, El Corte Inglés (ES/PT), Condis, Intermarché, ASDA, Waitrose, Ocado, REWE, Kaufland, Netto. Their catalogs would need a headed stealth browser, which is out of scope for this CLI. Lidl in some markets has no shoppable priced online catalog (weekly-flyer only).
 
 ## Install
 
@@ -179,6 +189,8 @@ Add an entry to `internal/registry`, pointing at either the SCAPI adapter (with 
 | `GROCERY_CONFIG_DIR` | Override `~/.grocery` (per-store session cache) |
 | `GROCERY_SCAPI_BASE` | Override the SCAPI host (debugging) |
 | `GROCERY_GADIS_STORE` | Gadis assortment store id (defaults to the site's own default) |
+| `GROCERY_ALDI_REGION` | ALDI price region: `pen` (default), `can`, `bal` |
+| `GROCERY_MAKRO_STORE` | Makro depot id (defaults to `00001`) |
 
 ## License
 
