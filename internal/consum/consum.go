@@ -44,7 +44,8 @@ type cProduct struct {
 	PriceData struct {
 		Prices []struct {
 			Value struct {
-				CentAmount float64 `json:"centAmount"`
+				CentAmount     float64 `json:"centAmount"`
+				CentUnitAmount float64 `json:"centUnitAmount"`
 			} `json:"value"`
 		} `json:"prices"`
 		UnitPriceUnitType string `json:"unitPriceUnitType"`
@@ -58,10 +59,21 @@ func (p cProduct) price() float64 {
 	return 0
 }
 
+// pricePerUnit is the price per kilo or litre. Consum publishes it, but its
+// product names carry no sizes at all, so without it nothing from Consum can be
+// ranked or compared per unit.
+func (p cProduct) pricePerUnit() float64 {
+	if len(p.PriceData.Prices) > 0 {
+		return p.PriceData.Prices[0].Value.CentUnitAmount
+	}
+	return 0
+}
+
 func (c *Client) toHit(p cProduct) store.Hit {
 	return store.Hit{
 		ID: p.ID.String(), Name: strings.TrimSpace(p.ProductData.Name), Price: p.price(),
-		Unit: unitFrom(p.PriceData.UnitPriceUnitType), Currency: "EUR", Available: true,
+		PricePerUnit: p.pricePerUnit(),
+		Unit:         unitFrom(p.PriceData.UnitPriceUnitType), Currency: "EUR", Available: true,
 		URL: baseURL + "/producto/" + p.ID.String(),
 	}
 }
