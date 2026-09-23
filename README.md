@@ -72,6 +72,8 @@ Not included: some chains sit behind bot-management (Cloudflare/Akamai/DataDome)
 
 ## Install
 
+Works on macOS, Linux and Windows. Needs Go 1.26 or later.
+
 ```bash
 go install github.com/jgalea/grocery-cli/cmd/grocery@latest
 ```
@@ -162,7 +164,7 @@ Tools exposed: `stores`, `search`, `batch`, `compare`, `product`, `categories`, 
 claude mcp add grocery -- grocery mcp
 ```
 
-**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, `%APPDATA%\Claude\claude_desktop_config.json` on Windows):
 
 ```json
 {
@@ -186,7 +188,7 @@ Add an entry to `internal/registry`, pointing at either the SCAPI adapter (with 
 | Env | Purpose |
 |-----|---------|
 | `GROCERY_STORE` | Default store key |
-| `GROCERY_CONFIG_DIR` | Override `~/.grocery` (per-store session cache) |
+| `GROCERY_CONFIG_DIR` | Override `~/.grocery` (per-store session cache; `%USERPROFILE%\.grocery` on Windows) |
 | `GROCERY_SCAPI_BASE` | Override the SCAPI host (debugging) |
 | `GROCERY_GADIS_STORE` | Gadis assortment store id (defaults to the site's own default) |
 | `GROCERY_ALDI_REGION` | ALDI price region: `pen` (default), `can`, `bal` |
