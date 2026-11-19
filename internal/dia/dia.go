@@ -17,7 +17,7 @@ import (
 
 const (
 	baseURL   = "https://www.dia.es"
-	userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
+	userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36"
 )
 
 type Client struct {
@@ -58,7 +58,11 @@ func (c *Client) toHit(it diaItem) store.Hit {
 func (c *Client) getJSON(u string, out any) error {
 	req, _ := http.NewRequest(http.MethodGet, u, nil)
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Accept-Language", "es-ES,es;q=0.9")
 	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("Referer", baseURL+"/")
+	req.Header.Set("X-Locale", "es")
+	req.Header.Set("X-Requested-With", "XMLHttpRequest")
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return err
